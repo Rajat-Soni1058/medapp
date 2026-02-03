@@ -17,9 +17,9 @@ mongoose.connect("mongodb+srv://orbital:orbital1058@cluster0.ediaafr.mongodb.net
   //middleware-------------->
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
-
 //Route---------->
 app.use("/patient",handlePatientRoute);
+
 app.use("/doctor", doctorRouter) 
 
 
