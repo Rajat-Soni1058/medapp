@@ -5,6 +5,7 @@ const port = 5000||process.env.PORT;
 const mongoose=require("mongoose")
 //imoprt files-------->
 const handlePatientRoute = require("./routes/patient.js")
+const { doctorRouter } = require("./routes/doctor.js")
 
 // database connection----------->
 mongoose.connect("mongodb+srv://orbital:orbital1058@cluster0.ediaafr.mongodb.net/MedApp").then(()=>{
@@ -19,6 +20,7 @@ app.use(express.urlencoded({ extended: false }));
 
 //Route---------->
 app.use("/patient",handlePatientRoute);
+app.use("/doctor", doctorRouter) 
 
 
 
