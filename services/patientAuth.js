@@ -13,15 +13,23 @@ function createPatientToken(patient){
 }
 //token validity checking ---------->
 function validPatientToken(token){
-    const payload=JWT.verify(token,secret);
-    return payload;
+    return JWT.verify(token,secret);
+    
 }
+// middleware for token checking -------->
+function checkValidPatient(req, res, next) {
+  const token = req.headers.authorization?.split(" ")[1];
+  try {
+    const patientPayload = validPatientToken(token);
+    req.patient = patientPayload;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      message: "Invalid or expired token",
+    });
+  }
+}
+
 module.exports={
-    createPatientToken,validPatientToken
+    createPatientToken,validPatientToken,checkValidPatient,
 }
-
-// function checkValidPatient(req,res,next){
-
-
-
-// }

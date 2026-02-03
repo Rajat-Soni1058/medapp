@@ -8,17 +8,15 @@ function doctorMiddleware(req,res,next){
     const token = req.headers.token
     const decodedPassword = validateToken(token)
 
-    if(decodedPassword){
-        res.json({
-            msg : "This is your Dashboard"
+    if(!decodedPassword){
+       return res.status(403).json({
+            error: "You are not signed in"
         })
+    
     }
-    else{
-        res.status(403).json({
-            msg : "You are not signed in"
-        })
-
-    }
+    req.doc=decodedPassword;
+    next();
+    
 
 }
 

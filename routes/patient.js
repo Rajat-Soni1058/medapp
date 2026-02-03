@@ -2,8 +2,22 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const Patient = require("../model/patientModel");
-const {createPatientToken} = require("../services/patientAuth.js")
+const {createPatientToken,checkValidPatient} = require("../services/patientAuth.js")
+const {DoctorModel}=require("../model/doctorModel.js")
+const Consultation=require("../model/consultationModel")
+const multer  = require('multer')
 const router=express.Router();
+// Multer diskStorage----->
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    return cb(null,"./uploads/patient")///destination ,patient ka form kaha ja raha hai 
+  },
+  filename: function (req, file, cb) {
+    return cb(null,`${Date.now()}-${file.originalname}`);// name of the file
+  }
+})
+const upload=multer({storage:storage})
+
 // signup of patient ---------->
 router.route("/signup").post(async(req,res)=>{
     const {name,email,password,phoneNo}=req.body;
@@ -18,6 +32,7 @@ router.route("/signup").post(async(req,res)=>{
     /// password hashing
     const hashedpassword=await bcrypt.hash(password,10);
     /// new patient create
+
     const  newPatient=await Patient.create({
         name,
         email,
@@ -43,6 +58,43 @@ router.route("/login").post(async(req,res)=>{
    return  res.status(200).json({token:token});
 
 })
+//doctorlist on basis of doctortype----->
+router.route("/:doctype").get(checkValidPatient,async(req,res)=>{
+    const speciality =req.params.doctype;
+    try{
+  const list=await DoctorModel.find({ speciality });
+  return res.json({Doclist:list});
+    }
+    catch(err){
+        return res.json({err:err});  
+  }
+})
+//formsubmit by patient---------->
+router.route("/form/:doc_id").post(checkValidPatient,upload.single("patientForm"),async(req,res)=>{
+ const {full_name,age,gender,contactNo,Problem,life_style}=req.body;
+ const doctor_id= req.params.doc_id;
+ if(!doctor_id){
+    return res.json({error:"doctoe id not given"})
+ }
+ const patient_id=req.patient.id;
+
+ const patientFileUrl = req.file
+        ? `uploads/patient/${req.file.filename}`
+        : undefined;
+ const con=await Consultation.create({
+    full_name,
+    age,
+    gender,
+    contactNo,
+Problem,
+life_style,
+patient_id,
+doctor_id,
+patientFileUrl,
+ })
+ return res.status(200).json({msg:con})
+})
+
 
 
 
