@@ -138,7 +138,7 @@ doctorRouter.post("/signin", async function(req,res){
 })
 
 doctorRouter.post("/dashboard", doctorMiddleware, async function(req,res){
-    console.log("Doctor Dashboard")
+    ////////////
 })
 
 
