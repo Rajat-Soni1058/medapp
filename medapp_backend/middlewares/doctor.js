@@ -5,7 +5,7 @@ const {validateToken} = require("../services/doctorAuth")
 
 
 function doctorMiddleware(req,res,next){
-    const token = req.headers.token
+    const token = req.headers.authorization?.split(" ")[1];
     const decodedPassword = validateToken(token)
 
     if(!decodedPassword){
@@ -14,7 +14,7 @@ function doctorMiddleware(req,res,next){
         })
     
     }
-    req.doc=decodedPassword;
+    req.doctorId=decodedPassword.id;
     next();
     
 

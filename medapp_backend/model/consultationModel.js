@@ -40,6 +40,11 @@ const consultSchema= new mongoose.Schema(
     doctorFileUrl: {
       type: String,
     },
+     type: {                
+      type: String,
+      enum: ["normal", "emergency"],
+      required : true,
+    },
     status: {
       type: String,
       enum: ["pending", "responded"],

@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const { z } = require("zod");
 const { doctorMiddleware } = require("../middlewares/doctor");
 const {createToken} = require("../services/doctorAuth")
+const Consultation=require("../model/consultationModel")
 
 
 doctorRouter.post("/signup", async function(req, res){
@@ -136,11 +137,85 @@ doctorRouter.post("/signin", async function(req,res){
 
 
 })
+// this is route for showing unsolved normal cases
 
-doctorRouter.post("/dashboard", doctorMiddleware, async function(req,res){
-    console.log("Doctor Dashboard")
-})
+doctorRouter.get("/cases/normal", doctorMiddleware, async function(req,res){
+    try {
+        const doctorId  = req.doctorId;
 
+        const cases = await Consultation.find({
+            doctor_id: doctorId,
+            type: "normal",
+            status: "pending"
+        })
+        .sort({ createdAt: -1 });   
+
+        res.json(cases);
+    } 
+    catch (e) {
+        res.status(500).json({ msg: "Server error", error: e.message });
+    }
+});
+
+// this is route for showing unsolved emergency cases
+
+doctorRouter.get("/cases/emergency", doctorMiddleware, async function(req,res){
+    try {
+        const doctorId  = req.doctorId;
+
+        const cases = await Consultation.find({
+            doctor_id: doctorId,
+            type: "emergency",
+            status: "pending"
+        })
+        .sort({ createdAt: -1 });   
+
+        res.json(cases);
+    } 
+    catch (e) {
+        res.status(500).json({ msg: "Server error", error: e.message });
+    }
+});
+
+// this is route for showing history of attended cases by doctor
+
+doctorRouter.get("/history", doctorMiddleware, async function(req, res){
+    try {
+        const doctorId  = req.doctorId;
+
+        const cases = await Consultation.find({
+            doctor_id: doctorId,
+            status: "responded"       
+        })
+        .sort({ createdAt: -1 });     
+
+        res.json(cases);
+    } 
+    catch (e) {
+        res.status(500).json({ msg: "Server error", error: e.message });
+    }
+});
+
+// this is route for showing form 
+
+doctorRouter.get("/showform/:consultId", doctorMiddleware, async function(req, res){
+    try {
+        const consultId = req.params.consultId;
+
+        const consultation = await Consultation.findOne({
+            _id: consultId
+        });
+
+        if (!consultation) {
+            return res.status(404).json({ msg: "Consultation not found" });
+        }
+
+        res.json(consultation);
+
+    } catch (e) {
+        res.status(500).json({ msg: "Server error", error: e.message });
+    }
+});
 
 
 
