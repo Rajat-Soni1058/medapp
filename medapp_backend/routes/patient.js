@@ -71,7 +71,7 @@ router.route("/:doctype").get(checkValidPatient,async(req,res)=>{
 })
 //formsubmit by patient---------->
 router.route("/form/:doc_id").post(checkValidPatient,upload.single("patientForm"),async(req,res)=>{
- const {full_name,age,gender,contactNo,Problem,life_style}=req.body;
+ const {full_name,age,gender,contactNo,Problem,life_style,type}=req.body;
  const doctor_id= req.params.doc_id;
  if(!doctor_id){
     return res.json({error:"doctoe id not given"})
@@ -86,6 +86,7 @@ router.route("/form/:doc_id").post(checkValidPatient,upload.single("patientForm"
     age,
     gender,
     contactNo,
+    type,
 Problem,
 life_style,
 patient_id,
