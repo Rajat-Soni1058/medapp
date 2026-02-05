@@ -4,10 +4,7 @@ const jwt = require("jsonwebtoken");
 function createToken(doctor){
 
     const token = jwt.sign({
-            id : doctor._id
-
-
-            
+            id : doctor._id  
         }, JWT_DOCTOR_PASSWORD)
 
         return token
