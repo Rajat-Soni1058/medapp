@@ -43,7 +43,6 @@ const consultSchema= new mongoose.Schema(
      type: {                
       type: String,
       enum: ["normal", "emergency"],
-      required : true,
     },
     status: {
       type: String,

@@ -6,8 +6,19 @@ const { z } = require("zod");
 const { doctorMiddleware } = require("../middlewares/doctor");
 const {createToken} = require("../services/doctorAuth")
 const Consultation=require("../model/consultationModel")
+const multer = require("multer");
 
-
+// Multer diskStorage----->
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    return cb(null,"./uploads/doctor")///destination ,doctor ka form kaha ja raha hai 
+  },
+  filename: function (req, file, cb) {
+    return cb(null,`${Date.now()}-${file.originalname}`);// name of the file
+  }
+})
+const upload=multer({storage:storage})
+//////////////////////////////
 doctorRouter.post("/signup", async function(req, res){
     const requireBody = z.object({
   email: z
@@ -216,6 +227,16 @@ doctorRouter.get("/showform/:consultId", doctorMiddleware, async function(req, r
         res.status(500).json({ msg: "Server error", error: e.message });
     }
 });
+// route for the doctor to upload the file ------------>
+doctorRouter.route("/showform/:consultId").post(doctorMiddleware,upload.single("doctorAnswer"),async(req,res)=>{
+    const _id=req.params.consultId;
+    const doctorId  = req.doctorId;
+    const doctorFileUrl= req.file
+    ? `uploads/doctor/${req.file.filename}`
+    : undefined;
+   const response= await Consultation.findByIdAndUpdate({ _id,doctor_id: doctorId },{status: "responded",doctorFileUrl}, { new: true });
+    return res.status(200).json({response});
+})
 
 
 
