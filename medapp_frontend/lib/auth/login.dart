@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medapp_frontend/auth/componets/my_textField.dart';
-
-class Login extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medapp_frontend/providers/auth_provider.dart';
+class Login extends ConsumerWidget {
   const Login({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
 final loginemailCtrl = TextEditingController();
 final loginpassCtrl = TextEditingController();
+
+final isloading =ref.watch(authProvider).isLoading;
+ref.listen(authProvider, (previous, next) {
+  if (previous?.error != next.error && next.error != null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(next.error!)),
+    );
+  }
+});
 
     return Scaffold(
       body: SingleChildScrollView(
