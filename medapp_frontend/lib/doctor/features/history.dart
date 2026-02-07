@@ -16,6 +16,9 @@ class _DoctorsPatientHistoryState extends State<DoctorsPatientHistory>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});//setstate used instead of riverpod
+    });
   }
 
   @override
