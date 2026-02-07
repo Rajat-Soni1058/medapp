@@ -228,7 +228,7 @@ doctorRouter.get("/showform/:consultId", doctorMiddleware, async function(req, r
     }
 });
 // route for the doctor to upload the file ------------>
-doctorRouter.route("/showform/:consultId").post(doctorMiddleware,upload.single("doctorAnswer"),async(req,res)=>{
+doctorRouter.route("/form/:consultId").post(doctorMiddleware,upload.single("doctorAnswer"),async(req,res)=>{
     const _id=req.params.consultId;
     const doctorId  = req.doctorId;
     const doctorFileUrl= req.file
