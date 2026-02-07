@@ -1,11 +1,12 @@
 require("dotenv").config()
 const express=require("express")
 const app=express()
-const port = 5000||process.env.PORT;
+const port = process.env.PORT||5000;
 const mongoose=require("mongoose")
 //imoprt files-------->
 const handlePatientRoute = require("./routes/patient.js")
 const { doctorRouter } = require("./routes/doctor.js")
+const handlePayment=require("./routes/payment.js")
 
 // database connection----------->
 mongoose.connect("mongodb+srv://orbital:orbital1058@cluster0.ediaafr.mongodb.net/MedApp").then(()=>{
@@ -19,9 +20,10 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
 //Route---------->
 app.use("/patient",handlePatientRoute);
-
-app.use("/doctor", doctorRouter) 
-
+//Route for the doctor ----->
+app.use("/doctor", doctorRouter);
+// razorpay payment route ----------->
+app.use("/payment",handlePayment);
 
 
 
