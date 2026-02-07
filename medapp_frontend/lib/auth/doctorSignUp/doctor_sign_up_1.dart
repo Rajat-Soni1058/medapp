@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medapp_frontend/auth/componets/my_textField.dart';
+import 'package:medapp_frontend/auth/doctorSignUp/doctor_sign_up_2.dart';
 import 'package:medapp_frontend/doctor/features/history.dart';
-import 'package:medapp_frontend/doctor/features/home.dart';
 
-class PatientSignup extends StatelessWidget {
-  const PatientSignup({super.key});
+class DoctorSignUp1 extends StatelessWidget {
+  const DoctorSignUp1({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,11 +13,13 @@ class PatientSignup extends StatelessWidget {
     final patientPassCtrl = TextEditingController();
     final confirmPatientPassCtrl = TextEditingController();
     final patientNameCtrl = TextEditingController();
-    final phoneCtrl = TextEditingController();
-//scaffold message//
+    //scaffold message//
     void showMessage(BuildContext context, String message) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message,style: TextStyle(color: Colors.red),), behavior: SnackBarBehavior.floating),
+        SnackBar(
+          content: Text(message, style: TextStyle(color: Colors.red)),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
 
@@ -40,12 +42,20 @@ class PatientSignup extends StatelessWidget {
                   'Because every patient matters',
                   style: GoogleFonts.manrope(fontSize: 15, color: Colors.grey),
                 ),
-                SizedBox(height: 10),
+                SizedBox(height: 20),
+                Text(
+                  "Doctor's",
+                  style: GoogleFonts.bungee(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 25,
+                    color: Colors.black,
+                  ),
+                ),
                 Text(
                   'Sign Up',
                   style: GoogleFonts.bungee(
                     fontWeight: FontWeight.bold,
-                    fontSize: 25,
+                    fontSize: 20,
                     color: Colors.black,
                   ),
                 ),
@@ -89,26 +99,6 @@ class PatientSignup extends StatelessWidget {
                   prefixIcon: Icons.email_outlined,
                 ),
                 SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Phone Number',
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 5),
-
-                MyTextField(
-                  controller: phoneCtrl,
-                  hint: 'Phone Number',
-                  prefixIcon: Icons.call,
-                ),
-                SizedBox(height: 20),
-
                 Align(
                   alignment: Alignment.centerLeft,
 
@@ -159,10 +149,6 @@ class PatientSignup extends StatelessWidget {
                       showMessage(context, 'Please enter your name');
                       return;
                     }
-                    if (phoneCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter your Phone number');
-                      return;
-                    }
 
                     if (patientEmailCtrl.text.isEmpty) {
                       showMessage(context, 'Please enter your email');
@@ -193,7 +179,7 @@ class PatientSignup extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => DoctorsPatientHistory(),
+                        builder: (_) => DoctorSignUp2(),
                       ),
                     );
                   },
@@ -201,7 +187,7 @@ class PatientSignup extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Text(
-                      'SignUp',
+                      'Next',
                       style: GoogleFonts.bungee(
                         fontWeight: FontWeight.bold,
                         fontSize: 25,
