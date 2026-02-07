@@ -118,6 +118,32 @@ patientFileUrl,
  return res.status(200).json({msg:con})
 })
 
+router.route("/emergency/masked/:consultId")
+.get(checkValidPatient, async (req, res) => {
+
+    const consultId = req.params.consultId;
+    const patient_id = req.patient.id;
+
+    const consultation = await Consultation.findOne({
+        _id: consultId,
+        patient_id: patient_id,
+        type: "emergency"
+    });
+
+    if(!consultation){
+        return res.json({
+            error: "Emergency case not found for this patient"
+        });
+    }
+
+     const maskedNumber = "08045889186";
+
+    return res.json({
+        maskedNumber: maskedNumber,
+        msg: "Use this number to call the doctor"
+    });
+});
+
 
 
 module.exports=router;

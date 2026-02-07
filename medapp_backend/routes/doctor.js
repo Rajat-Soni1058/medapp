@@ -237,6 +237,37 @@ doctorRouter.route("/form/:consultId").post(doctorMiddleware,upload.single("doct
    const response= await Consultation.findByIdAndUpdate({ _id,doctor_id: doctorId },{status: "responded",doctorFileUrl}, { new: true });
     return res.status(200).json({response});
 })
+
+doctorRouter.get("/emergency/masked/:consultId", doctorMiddleware, async function(req, res){
+
+    const consultId = req.params.consultId;
+
+    // Find case only by consultation ID (since it's unique)
+    const consultation = await Consultation.findById(consultId);
+
+    if(!consultation){
+        return res.json({
+            msg: "Consultation not found"
+        });
+    }
+
+    // Ensure it is an emergency case
+    if(consultation.type !== "emergency"){
+        return res.json({
+            msg: "This is not an emergency case"
+        });
+    }
+
+    // Temporary masked number (replace after KYC)
+    const maskedNumber = "08045889186";
+
+    res.json({
+        maskedNumber,
+        msg: "Use this number to call the patient"
+    });
+});
+
 module.exports = {
     doctorRouter : doctorRouter
 }
+
