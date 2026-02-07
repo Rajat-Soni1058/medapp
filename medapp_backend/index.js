@@ -18,6 +18,11 @@ mongoose.connect("mongodb+srv://orbital:orbital1058@cluster0.ediaafr.mongodb.net
   //middleware-------------->
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
+// route for home ----->
+app.get("/", (req, res) => {
+  res.status(200).send("MedApp Backend is running");
+});
+
 //Route---------->
 app.use("/patient",handlePatientRoute);
 //Route for the doctor ----->
