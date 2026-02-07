@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:medapp_frontend/auth/common_start.dart';
 import 'package:medapp_frontend/auth/login.dart';
 import 'package:medapp_frontend/auth/patient_signUp.dart';
 import 'package:medapp_frontend/doctor/features/home.dart';
@@ -28,7 +29,7 @@ class MainApp extends StatelessWidget {
       
       theme: ThemeData.light(),
       debugShowCheckedModeBanner: false,
-      home: PatientSignup(),
+      home: CommonStart(),
     );
   }
 }

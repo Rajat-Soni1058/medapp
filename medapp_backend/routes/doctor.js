@@ -237,10 +237,6 @@ doctorRouter.route("/form/:consultId").post(doctorMiddleware,upload.single("doct
    const response= await Consultation.findByIdAndUpdate({ _id,doctor_id: doctorId },{status: "responded",doctorFileUrl}, { new: true });
     return res.status(200).json({response});
 })
-
-
-
-
 module.exports = {
     doctorRouter : doctorRouter
 }
