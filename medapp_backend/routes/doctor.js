@@ -125,10 +125,9 @@ doctorRouter.post("/signin", async function(req,res){
     })
 
     if(!doctor){
-        res.json({
+        return res.status(404).json({
             msg : "Doctor does not exist in our db"
         })
-        return
     }
 
     const passwordMatched = await bcrypt.compare(password, doctor.password)
@@ -136,12 +135,12 @@ doctorRouter.post("/signin", async function(req,res){
     if(passwordMatched){
         const token = createToken(doctor)
 
-        res.json({
+        return res.json({
             token : token
         })
     }
     else{
-        res.status(403).json({
+        return res.status(401).json({
             msg : "Incorrect Credentials"
         })
     }

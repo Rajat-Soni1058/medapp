@@ -1,25 +1,106 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medapp_frontend/auth/componets/my_textField.dart';
+import 'package:medapp_frontend/auth/login.dart';
 import 'package:medapp_frontend/doctor/features/history.dart';
 import 'package:medapp_frontend/doctor/features/home.dart';
+import 'package:medapp_frontend/providers/auth_provider.dart';
 
-class PatientSignup extends StatelessWidget {
+class PatientSignup extends ConsumerStatefulWidget {
   const PatientSignup({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final patientEmailCtrl = TextEditingController();
+  ConsumerState<PatientSignup> createState() => _PatientSignupState();
+} 
+class _PatientSignupState extends ConsumerState<PatientSignup> {
+   final patientEmailCtrl = TextEditingController();
     final patientPassCtrl = TextEditingController();
     final confirmPatientPassCtrl = TextEditingController();
     final patientNameCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
-//scaffold message//
-    void showMessage(BuildContext context, String message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message,style: TextStyle(color: Colors.red),), behavior: SnackBarBehavior.floating),
+
+   @override 
+   void dispose(){
+    patientEmailCtrl.dispose();
+     patientPassCtrl.dispose();
+    confirmPatientPassCtrl.dispose();
+    patientNameCtrl.dispose();
+    phoneCtrl.dispose();
+    super.dispose();
+   }
+
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message, style: const TextStyle(color: Colors.white)), behavior: SnackBarBehavior.floating),
+    );
+  }
+    Future<void> handleSignup() async {
+      if(patientNameCtrl.text.isEmpty){
+        showMessage('Please enter your name');
+        return;
+      }
+      if (phoneCtrl.text.isEmpty) {
+      showMessage('Please enter your Phone number');
+      return;
+    }
+    if (patientEmailCtrl.text.isEmpty) {
+      showMessage('Please enter your email');
+      return;
+    }
+    if (!patientEmailCtrl.text.contains('@')) {
+      showMessage('Please enter a valid email');
+      return;
+    }
+    if (patientPassCtrl.text.isEmpty) {
+      showMessage('Please enter password');
+      return;
+    }
+    if (patientPassCtrl.text.length < 6) {
+      showMessage('Password must be at least 6 characters');
+      return;
+    }
+    if (confirmPatientPassCtrl.text.isEmpty) {
+      showMessage('Please confirm your password');
+      return;
+    }
+    if (patientPassCtrl.text != confirmPatientPassCtrl.text) {
+      showMessage('Passwords do not match');
+      return;
+    }
+    final success=await ref.read(authProvider.notifier).signUp({
+        'name': patientNameCtrl.text.trim(),
+        'email': patientEmailCtrl.text.trim(),
+        'password': patientPassCtrl.text.trim(),
+      'phoneNo': phoneCtrl.text.trim(),
+
+    }, false );
+    if(mounted && success) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const DoctorsPatientHistory()),
+        (route) => false,
       );
     }
+    }
+
+
+
+
+  @override
+
+  Widget build(BuildContext context) {
+   final isLoading =ref.watch(authProvider).isLoading;
+
+   ref.listen(authProvider, (previous, next) {
+      if (previous?.error != next.error && next.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.error!)),
+        );
+      }
+  
+   });
+//scaffold message//
+   
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -146,7 +227,7 @@ class PatientSignup extends StatelessWidget {
                 SizedBox(height: 5),
                 MyTextField(
                   controller: confirmPatientPassCtrl,
-                  hint: 'confrim password',
+                  hint: 'confirm password',
                   prefixIcon: Icons.lock,
                 ),
                 SizedBox(height: 20),
@@ -154,65 +235,29 @@ class PatientSignup extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.greenAccent,
                   ),
-                  onPressed: () {
-                    if (patientNameCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter your name');
-                      return;
-                    }
-                    if (phoneCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter your Phone number');
-                      return;
-                    }
-
-                    if (patientEmailCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter your email');
-                      return;
-                    }
-
-                    if (!patientEmailCtrl.text.contains('@')) {
-                      showMessage(context, 'Please enter a valid email');
-                      return;
-                    }
-
-                    if (patientPassCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter password');
-                      return;
-                    }
-
-                    if (confirmPatientPassCtrl.text.isEmpty) {
-                      showMessage(context, 'Please confirm your password');
-                      return;
-                    }
-
-                    if (patientPassCtrl.text != confirmPatientPassCtrl.text) {
-                      showMessage(context, 'Passwords do not match');
-                      return;
-                    }
-
-                    // All validations passed
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DoctorsPatientHistory(),
-                      ),
-                    );
-                  },
-
+                  onPressed: isLoading ? null : handleSignup,
                   child: Padding(
                     padding: const EdgeInsets.all(10.0),
-                    child: Text(
-                      'SignUp',
-                      style: GoogleFonts.bungee(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 25,
-                        color: Colors.white,
-                      ),
-                    ),
+                    child: isLoading
+                        ? const CircularProgressIndicator()
+                        : Text(
+                            'SignUp',
+                            style: GoogleFonts.bungee(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 25,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
                 SizedBox(height: 10),
                 InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => Login()),
+                    );
+                  },
                   child: Text(
                     "Already have an account? Sign In",
                     style: GoogleFonts.manrope(

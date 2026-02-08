@@ -1,14 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:medapp_frontend/auth/common_start.dart';
 import 'package:medapp_frontend/auth/componets/my_textField.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medapp_frontend/doctor/features/history.dart';
+import 'package:medapp_frontend/providers/auth_provider.dart';
+import 'package:medapp_frontend/doctor/features/home.dart';
+import 'package:medapp_frontend/patient/features/home.dart';
+class Login extends ConsumerStatefulWidget {
+  final bool isDoctor;
 
-class Login extends StatelessWidget {
-  const Login({super.key});
+  const Login({super.key, this.isDoctor =false});
 
   @override
-  Widget build(BuildContext context) {
+  ConsumerState<Login> createState() => _LoginState(); }
+  class _LoginState extends ConsumerState<Login> {
 final loginemailCtrl = TextEditingController();
 final loginpassCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    loginemailCtrl.dispose();
+    loginpassCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> handleLogin() async {
+    if(loginemailCtrl.text.isEmpty || loginpassCtrl.text.isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill all fields')),
+      );
+      return;
+    }
+     await ref.read(authProvider.notifier).login(
+          loginemailCtrl.text.trim(),
+          loginpassCtrl.text.trim(),
+          widget.isDoctor,
+  );
+  if(mounted) {
+    final authstate=ref.read(authProvider);
+    if(authstate.isAuthenticated) {
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) =>
+                widget.isDoctor ? DoctorHome() :DoctorsPatientHistory (),
+          ),
+          (route) => false,
+        );
+    }
+  }
+  }
+
+ 
+  Widget build(BuildContext context) {
+
+
+final isloading =ref.watch(authProvider).isLoading;
+ref.listen(authProvider, (previous, next) {
+  if (previous?.error != next.error && next.error != null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(next.error!)),
+    );
+  }
+});
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -105,22 +159,26 @@ final loginpassCtrl = TextEditingController();
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.greenAccent,
                 ),
-                onPressed: () {},
+                onPressed: isloading ? null : handleLogin,
                 child: Padding(
                   padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    'Login',
-                    style: GoogleFonts.bungee(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 25,
-                      color: Colors.black,
-                    ),
-                  ),
+                  child: isloading
+                      ? const CircularProgressIndicator()
+                      : Text(
+                          'Login',
+                          style: GoogleFonts.bungee(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                            color: Colors.black,
+                          ),
+                        ),
                 ),
               ),
               SizedBox(height: 10),
               InkWell(
-                onTap: (){},
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const CommonStart()));
+                },
                 child: Text(
                   "Don't have an account? Sign Up",
                   style: GoogleFonts.manrope(

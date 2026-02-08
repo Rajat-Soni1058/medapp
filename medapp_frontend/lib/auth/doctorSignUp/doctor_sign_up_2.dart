@@ -1,27 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medapp_frontend/auth/componets/my_textField.dart';
+import 'package:medapp_frontend/auth/login.dart';
+import 'package:medapp_frontend/providers/auth_provider.dart';
 
-class DoctorSignUp2 extends StatefulWidget {
-  const DoctorSignUp2({super.key});
+class DoctorSignUp2 extends ConsumerStatefulWidget {
+  final String name;
+  final String email;
+  final String password;
+  const DoctorSignUp2({super.key, required this.name, required this.email, required this.password});
+
+  
 
   @override
-  State<DoctorSignUp2> createState() => _DoctorSignUp2State();
+  ConsumerState<DoctorSignUp2> createState() => _DoctorSignUp2State();
 }
 
-class _DoctorSignUp2State extends State<DoctorSignUp2> {
+class _DoctorSignUp2State extends ConsumerState<DoctorSignUp2> {
     TimeOfDay? startTime;
     TimeOfDay? endTime;
-  @override
-  Widget build(BuildContext context) {
-    final phoneCtrl = TextEditingController();
+     final phoneCtrl = TextEditingController();
     final licenseCtrl = TextEditingController();
     final feesCtrl = TextEditingController();
     final specialityCtrl = TextEditingController();
 
+    void dispose(){
+      phoneCtrl.dispose();
+      licenseCtrl.dispose();
+      feesCtrl.dispose();
+      specialityCtrl.dispose();
+      super.dispose();
 
-    //scaffold message//
-    void showMessage(BuildContext context, String message) {
+    }
+     void showMessage(BuildContext context, String message) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message, style: TextStyle(color: Colors.red)),
@@ -29,9 +41,7 @@ class _DoctorSignUp2State extends State<DoctorSignUp2> {
         ),
       );
     }
-
-    //time picker
-    Future<void> pickTime(bool isStart) async {
+     Future<void> pickTime(bool isStart) async {
       final picked = await showTimePicker(
         builder: (context, child) {
           return Theme(
@@ -72,6 +82,74 @@ class _DoctorSignUp2State extends State<DoctorSignUp2> {
         });
       }
     }
+    String formatTimeOfDay(TimeOfDay time) {
+      final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+      final minute = time.minute.toString().padLeft(2, '0');
+      final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+      return '$hour:$minute $period';
+    }
+    Future<void> handleSignup() async {
+    if (phoneCtrl.text.isEmpty) {
+      showMessage(context, 'Please enter phone number');
+      return;
+    }
+    if (licenseCtrl.text.isEmpty) {
+      showMessage(context, 'Please enter license ID');
+      return;
+    }
+    if (feesCtrl.text.isEmpty) {
+      showMessage(context, 'Please enter consultation fees');
+      return;
+    }
+    if (specialityCtrl.text.isEmpty) {
+      showMessage(context,'Please enter your speciality');
+      return;
+    }
+    if (startTime == null || endTime == null) {
+      showMessage(context,'Please select available time');
+      return;
+    }
+
+    final availTime =
+        '${formatTimeOfDay(startTime!)} - ${formatTimeOfDay(endTime!)}';
+
+    final success = await ref.read(authProvider.notifier).signUp({
+      'name': widget.name,
+      'email': widget.email,
+      'password': widget.password,
+      'phone': phoneCtrl.text.trim(),
+      'licenceId': licenseCtrl.text.trim(),
+      'fees': int.tryParse(feesCtrl.text.trim()) ?? 0,
+      'speciality': specialityCtrl.text.trim(),
+      'availTime': availTime,
+    }, true);
+
+    if (mounted && success) {
+      showMessage(context, 'Doctor signup successful! Please login.');
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const Login(isDoctor: true)),
+        (route) => false,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+   final isLoading =ref.watch(authProvider).isLoading;
+    ref.listen(authProvider, (previous, next) {
+        if (previous?.error != next.error && next.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(next.error!)),
+          );
+        }
+      });
+
+
+    //scaffold message//
+   
+
+    //time picker
+   
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -228,31 +306,7 @@ class _DoctorSignUp2State extends State<DoctorSignUp2> {
                     backgroundColor: Colors.greenAccent,
                   ),
                   onPressed: () {
-                    if (phoneCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter your phone number');
-                      return;
-                    }
-
-                    if (licenseCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter your license');
-                      return;
-                    }
-
-                    if (!feesCtrl.text.contains('@')) {
-                      showMessage(context, 'Please enter a fee');
-                      return;
-                    }
-
-                    if (specialityCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter speciality');
-                      return;
-                    }
-
-                    // All validations passed
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => DoctorSignUp2()),
-                    );
+                    isLoading? null : handleSignup();
                   },
 
                   child: Padding(
