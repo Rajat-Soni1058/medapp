@@ -2,19 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medapp_frontend/auth/componets/my_textField.dart';
 import 'package:medapp_frontend/auth/doctorSignUp/doctor_sign_up_2.dart';
+import 'package:medapp_frontend/auth/login.dart';
 import 'package:medapp_frontend/doctor/features/history.dart';
 
-class DoctorSignUp1 extends StatelessWidget {
+class DoctorSignUp1 extends StatefulWidget {
   const DoctorSignUp1({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final patientEmailCtrl = TextEditingController();
+  State<DoctorSignUp1> createState() => _DoctorSignUp1State();
+}
+
+class _DoctorSignUp1State extends State<DoctorSignUp1> {
+  final patientEmailCtrl = TextEditingController();
     final patientPassCtrl = TextEditingController();
     final confirmPatientPassCtrl = TextEditingController();
     final patientNameCtrl = TextEditingController();
-    //scaffold message//
-    void showMessage(BuildContext context, String message) {
+
+    @override 
+    void dispose(){
+      patientNameCtrl.dispose();
+      patientEmailCtrl.dispose();
+      patientPassCtrl.dispose();
+      confirmPatientPassCtrl.dispose();
+      super.dispose();
+    }
+     void showMessage(BuildContext context, String message) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message, style: TextStyle(color: Colors.red)),
@@ -22,6 +34,63 @@ class DoctorSignUp1 extends StatelessWidget {
         ),
       );
     }
+    void handleNext() {
+      if (patientNameCtrl.text.isEmpty) {
+        showMessage(context, 'Please enter your name');
+        return;
+      }
+      if (patientEmailCtrl.text.isEmpty) {
+        showMessage(context, 'Please enter your email');
+        return;
+      }
+      if (!patientEmailCtrl.text.contains('@')) {
+        showMessage(context, 'Please enter a valid email');
+        return;
+      }
+      if (patientPassCtrl.text.isEmpty) {
+        showMessage(context, 'Please enter password');
+        return;
+      }
+      if (patientPassCtrl.text.length < 8) {
+        showMessage(context, 'Password must be at least 8 characters');
+        return;
+      }
+      if (!RegExp(r'[A-Z]').hasMatch(patientPassCtrl.text)) {
+        showMessage(context, 'Password must contain at least one uppercase letter');
+        return;
+      }
+      if (!RegExp(r'[0-9]').hasMatch(patientPassCtrl.text)) {
+        showMessage(context, 'Password must contain at least one number');
+        return;
+      }
+      if (!RegExp(r'[^A-Za-z0-9]').hasMatch(patientPassCtrl.text)) {
+        showMessage(context, 'Password must contain at least one special character');
+        return;
+      }
+      if (confirmPatientPassCtrl.text.isEmpty) {
+        showMessage(context, 'Please confirm your password');
+        return;
+      }
+      if (patientPassCtrl.text != confirmPatientPassCtrl.text) {
+        showMessage(context, 'Passwords do not match');
+        return;
+      }
+
+      // All validations passed
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => DoctorSignUp2(
+          name: patientNameCtrl.text.trim(),
+          email: patientEmailCtrl.text.trim(),
+          password: patientPassCtrl.text.trim(),
+        )),
+      );
+    }
+  @override
+  Widget build(BuildContext context) {
+    
+    //scaffold message//
+   
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -144,45 +213,7 @@ class DoctorSignUp1 extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.greenAccent,
                   ),
-                  onPressed: () {
-                    if (patientNameCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter your name');
-                      return;
-                    }
-
-                    if (patientEmailCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter your email');
-                      return;
-                    }
-
-                    if (!patientEmailCtrl.text.contains('@')) {
-                      showMessage(context, 'Please enter a valid email');
-                      return;
-                    }
-
-                    if (patientPassCtrl.text.isEmpty) {
-                      showMessage(context, 'Please enter password');
-                      return;
-                    }
-
-                    if (confirmPatientPassCtrl.text.isEmpty) {
-                      showMessage(context, 'Please confirm your password');
-                      return;
-                    }
-
-                    if (patientPassCtrl.text != confirmPatientPassCtrl.text) {
-                      showMessage(context, 'Passwords do not match');
-                      return;
-                    }
-
-                    // All validations passed
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DoctorSignUp2(),
-                      ),
-                    );
-                  },
+                  onPressed: handleNext,
 
                   child: Padding(
                     padding: const EdgeInsets.all(10.0),
@@ -196,9 +227,14 @@ class DoctorSignUp1 extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => Login(isDoctor: true)),
+                    );
+                  },
                   child: Text(
                     "Already have an account? Sign In",
                     style: GoogleFonts.manrope(

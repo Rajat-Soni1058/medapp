@@ -10,10 +10,12 @@ class AuthService {
       required bool isDoctor}) async {
     try {
       final endpoint = isDoctor ? '/doctor/signin' : '/patient/login';
+      print('Login attempt: $endpoint');
       final response = await _apiService.post(endpoint, {
         'email': email,
         'password': password,
       });
+      print('Login response: $response');
 
       if (response.containsKey('token')) {
         await TokenStorage.saveAuth(
@@ -25,7 +27,8 @@ class AuthService {
         return response['msg'] ?? response['error'] ?? 'Login failed';
       }
     } catch (e) {
-      return e.toString().replaceAll('Exception: ', '');
+      print('Login error: $e');
+      return e.toString().replaceAll('Exception: ', '').replaceAll('Failed to post: ', '');
     }
   }
 
@@ -33,21 +36,37 @@ class AuthService {
       {required Map<String, dynamic> data, required bool isDoctor}) async {
     try {
       final endpoint = isDoctor ? '/doctor/signup' : '/patient/signup';
+      print('Signup attempt: $endpoint with data: $data');
       final response = await _apiService.post(endpoint, data);
+      print('Signup response: $response');
 
-    
       if (isDoctor) {
      
-        return null; 
+        if (response.containsKey('msg') && 
+            (response['msg'].toString().toLowerCase().contains('success') ||
+             response['msg'].toString().toLowerCase().contains('signed up'))) {
+          return null; // Success
+        } else if (response.containsKey('error')) {
+          return response['error'].toString();
+        } else if (response.containsKey('msg')) {
+          return response['msg'].toString();
+        }
+        return 'Signup failed';
       } else {
-         if (response.containsKey('token')) {
-             await TokenStorage.saveAuth(token: response['token'], role: 'patient');
-             return null;
-         }
+        
+        if (response.containsKey('token')) {
+          await TokenStorage.saveAuth(token: response['token'], role: 'patient');
+          return null;
+        } else if (response.containsKey('error')) {
+          return response['error'].toString();
+        } else if (response.containsKey('msg')) {
+          return response['msg'].toString();
+        }
+        return 'Signup failed';
       }
-      return null;
     } catch (e) {
-      return e.toString().replaceAll('Exception: ', '');
+      print('Signup error: $e');
+      return e.toString().replaceAll('Exception: ', '').replaceAll('Failed to post: ', '');
     }
   }
 

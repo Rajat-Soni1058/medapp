@@ -41,12 +41,26 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> checkAuthStatus() async {
     state = state.copyWith(isLoading: true);
-    final token = await TokenStorage.getToken();
-    final role = await TokenStorage.getUserRole();
+    
+    try {
+      // Add timeout to prevent infinite loading
+      final token = await TokenStorage.getToken().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => null,
+      );
+      final role = await TokenStorage.getUserRole().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => null,
+      );
 
-    if (token != null && token.isNotEmpty) {
-      state = AuthState(isAuthenticated: true, role: role, isLoading: false);
-    } else {
+      if (token != null && token.isNotEmpty) {
+        state = AuthState(isAuthenticated: true, role: role, isLoading: false);
+      } else {
+        state = AuthState(isAuthenticated: false, isLoading: false);
+      }
+    } catch (e) {
+      // If storage fails, assume not authenticated
+      print('Auth check error: $e');
       state = AuthState(isAuthenticated: false, isLoading: false);
     }
   }

@@ -33,7 +33,9 @@ class _MainAppState extends ConsumerState<MainApp> {
   void initState() {
     super.initState();
     // Check auth status when app starts
-    ref.read(authProvider.notifier).checkAuthStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(authProvider.notifier).checkAuthStatus();
+    });
   }
 
   @override
@@ -44,11 +46,21 @@ class _MainAppState extends ConsumerState<MainApp> {
       theme: ThemeData.light(),
       debugShowCheckedModeBanner: false,
       home: authState.isLoading 
-          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          ? Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 20),
+                    Text('Loading...', style: TextStyle(fontSize: 16)),
+                  ],
+                ),
+              ),
+            )
           : (authState.isAuthenticated 
-              ? (authState.role == 'doctor' ? DoctorHome() : DoctorHome()) 
+              ? (authState.role == 'doctor' ? DoctorHome() : DoctorsPatientHistory()) 
               : const CommonStart()), 
-              // CommonStart is better root than Login usually as it asks "Doc or Patient"
     );
   }
 }

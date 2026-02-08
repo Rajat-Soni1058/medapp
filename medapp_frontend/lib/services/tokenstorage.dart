@@ -1,7 +1,12 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class TokenStorage{
-  static const _storage = FlutterSecureStorage();
+  
+  static const _storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+  );
   static const _tokenKey = 'auth_token';
   static const _roleKey = 'user_role';
 
@@ -20,11 +25,21 @@ class TokenStorage{
   }
 
   static Future<String?> getToken() async {
-    return await _storage.read(key: _tokenKey);
+    try {
+      return await _storage.read(key: _tokenKey);
+    } catch (e) {
+      print('Error reading token: $e');
+      return null;
+    }
   }
 
   static Future<String?> getUserRole() async {
-    return await _storage.read(key: _roleKey);
+    try {
+      return await _storage.read(key: _roleKey);
+    } catch (e) {
+      print('Error reading role: $e');
+      return null;
+    }
   }
   
   static Future<void> clearAuth() async {

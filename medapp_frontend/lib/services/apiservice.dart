@@ -18,11 +18,11 @@ class ApiService {
       if(response.statusCode>=400) {
         try{
           final e=jsonDecode(response.body) as Map<String,dynamic>;
-          throw Exception('Failed to post: ${e['message'] ?? 'Unknown error'}');
+          throw Exception(e['msg'] ?? e['message'] ?? e['error'] ?? 'Unknown error');
           
         }
         catch(_){
-          throw Exception('Failed to post: ${response.statusCode} ${response.body}');}
+          throw Exception('${response.statusCode} ${response.body}');}
         }
       
       return jsonDecode(response.body) as Map<String,dynamic>;
@@ -43,11 +43,11 @@ class ApiService {
     if(response.statusCode>=400) {
       try{
         final e=jsonDecode(response.body) as Map<String,dynamic>;
-        throw Exception('Failed to get: ${e['message'] ?? 'Unknown error'}');
+        throw Exception(e['msg'] ?? e['message'] ?? e['error'] ?? 'Unknown error');
         
       }
       catch(_){
-        throw Exception('Failed to get: ${response.statusCode} ${response.body}');}
+        throw Exception('${response.statusCode} ${response.body}');}
       }
     
     return jsonDecode(response.body);

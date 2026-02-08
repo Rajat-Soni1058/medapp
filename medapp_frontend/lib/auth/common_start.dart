@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medapp_frontend/auth/doctorSignUp/doctor_sign_up_1.dart';
+import 'package:medapp_frontend/auth/login.dart';
 import 'package:medapp_frontend/auth/patient_signUp.dart';
 
 class CommonStart extends StatefulWidget {
@@ -183,7 +184,26 @@ class _CommonStartState extends State<CommonStart> {
                     ),
                   ),
                 ),
-            ],
+                const SizedBox(height: 10),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => Login(isDoctor: isDoctor),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    "Already have an account? Login",
+                    style: GoogleFonts.manrope(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ),
+                            ],
           ),
         ),
       ),
