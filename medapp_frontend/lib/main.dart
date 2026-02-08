@@ -6,6 +6,7 @@ import 'package:medapp_frontend/auth/login.dart';
 import 'package:medapp_frontend/auth/patient_signUp.dart';
 import 'package:medapp_frontend/doctor/features/home.dart';
 import 'package:medapp_frontend/doctor/features/history.dart';
+import 'package:medapp_frontend/patient/features/patientForm/patient_form.dart';
 import 'package:medapp_frontend/providers/auth_provider.dart';
 
 void main() {
@@ -45,22 +46,23 @@ class _MainAppState extends ConsumerState<MainApp> {
     return MaterialApp(
       theme: ThemeData.light(),
       debugShowCheckedModeBanner: false,
-      home: authState.isLoading 
-          ? Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 20),
-                    Text('Loading...', style: TextStyle(fontSize: 16)),
-                  ],
-                ),
-              ),
-            )
-          : (authState.isAuthenticated 
-              ? (authState.role == 'doctor' ? DoctorHome() : DoctorsPatientHistory()) 
-              : const CommonStart()), 
+      home: PatientForm(),
+    //authState.isLoading 
+    //       ? Scaffold(
+    //           body: Center(
+    //             child: Column(
+    //               mainAxisAlignment: MainAxisAlignment.center,
+    //               children: const [
+    //                 CircularProgressIndicator(),
+    //                 SizedBox(height: 20),
+    //                 Text('Loading...', style: TextStyle(fontSize: 16)),
+    //               ],
+    //             ),
+    //           ),
+    //         )
+    //       : (authState.isAuthenticated 
+    //           ? (authState.role == 'doctor' ? DoctorHome() : DoctorsPatientHistory()) 
+    //           : const CommonStart()), 
     );
   }
 }
