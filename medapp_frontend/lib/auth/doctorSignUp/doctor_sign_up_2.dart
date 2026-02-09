@@ -134,6 +134,10 @@ class _DoctorSignUp2State extends ConsumerState<DoctorSignUp2> {
   }
 
   @override
+
+
+
+  
   Widget build(BuildContext context) {
    final isLoading =ref.watch(authProvider).isLoading;
     ref.listen(authProvider, (previous, next) {

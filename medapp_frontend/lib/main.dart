@@ -6,6 +6,8 @@ import 'package:medapp_frontend/auth/login.dart';
 import 'package:medapp_frontend/auth/patient_signUp.dart';
 import 'package:medapp_frontend/doctor/features/home.dart';
 import 'package:medapp_frontend/doctor/features/history.dart';
+import 'package:medapp_frontend/doctor/providers/doctorprovider.dart';
+import 'package:medapp_frontend/patient/features/home.dart';
 import 'package:medapp_frontend/patient/features/patientForm/patient_form.dart';
 import 'package:medapp_frontend/patient/features/patientHistory/patient_history.dart';
 import 'package:medapp_frontend/providers/auth_provider.dart';
@@ -47,7 +49,7 @@ class _MainAppState extends ConsumerState<MainApp> {
     return MaterialApp(
       theme: ThemeData.light(),
       debugShowCheckedModeBanner: false,
-      home: PatientHistory(),
+      home: PatientHome(),
     //authState.isLoading 
     //       ? Scaffold(
     //           body: Center(
