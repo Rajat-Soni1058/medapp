@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medapp_frontend/auth/common_start.dart';
+import 'package:medapp_frontend/auth/doctorSignUp/doctor_sign_up_1.dart';
+import 'package:medapp_frontend/auth/doctorSignUp/doctor_sign_up_2.dart';
 import 'package:medapp_frontend/auth/login.dart';
 import 'package:medapp_frontend/auth/patient_signUp.dart';
 import 'package:medapp_frontend/doctor/features/home.dart';
 import 'package:medapp_frontend/doctor/features/history.dart';
+import 'package:medapp_frontend/patient/features/chat/chat.dart';
 import 'package:medapp_frontend/doctor/providers/doctorprovider.dart';
 import 'package:medapp_frontend/patient/features/home.dart';
 import 'package:medapp_frontend/patient/features/patientForm/patient_form.dart';
@@ -49,7 +52,7 @@ class _MainAppState extends ConsumerState<MainApp> {
     return MaterialApp(
       theme: ThemeData.light(),
       debugShowCheckedModeBanner: false,
-      home: PatientHome(),
+      home: ChatScreen(),
     //authState.isLoading 
     //       ? Scaffold(
     //           body: Center(
