@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:medapp_frontend/patient/features/patientForm/emergency_form.dart';
-import 'package:medapp_frontend/patient/features/patientForm/normal_form.dart';
+import 'package:medapp_frontend/patient/features/patientForm/forms/emergency_form.dart';
+import 'package:medapp_frontend/patient/features/patientForm/forms/normal_form.dart';
 
 class PatientForm extends StatefulWidget {
   const PatientForm({super.key});
