@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 class ApiService {
   static const String baseUrl = 'https://consultone-six3.onrender.com';
-  static const Duration timeout = Duration(seconds: 30);
+  static const Duration timeout = Duration(seconds: 60);
   Future<Map<String,dynamic>> post (String endpoint, Map<String,dynamic> body, {String ?token} ) async {
     try {
       final response = await http.post(
