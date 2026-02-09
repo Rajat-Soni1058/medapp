@@ -125,10 +125,9 @@ doctorRouter.post("/signin", async function(req,res){
     })
 
     if(!doctor){
-        res.json({
+        return res.status(404).json({
             msg : "Doctor does not exist in our db"
         })
-        return
     }
 
     const passwordMatched = await bcrypt.compare(password, doctor.password)
@@ -136,12 +135,12 @@ doctorRouter.post("/signin", async function(req,res){
     if(passwordMatched){
         const token = createToken(doctor)
 
-        res.json({
+        return res.json({
             token : token
         })
     }
     else{
-        res.status(403).json({
+        return res.status(401).json({
             msg : "Incorrect Credentials"
         })
     }
@@ -238,9 +237,36 @@ doctorRouter.route("/form/:consultId").post(doctorMiddleware,upload.single("doct
     return res.status(200).json({response});
 })
 
+doctorRouter.get("/emergency/masked/:consultId", doctorMiddleware, async function(req, res){
 
+    const consultId = req.params.consultId;
 
+    // Find case only by consultation ID (since it's unique)
+    const consultation = await Consultation.findById(consultId);
+
+    if(!consultation){
+        return res.json({
+            msg: "Consultation not found"
+        });
+    }
+
+    // Ensure it is an emergency case
+    if(consultation.type !== "emergency"){
+        return res.json({
+            msg: "This is not an emergency case"
+        });
+    }
+
+    // Temporary masked number (replace after KYC)
+    const maskedNumber = "08045889186";
+
+    res.json({
+        maskedNumber,
+        msg: "Use this number to call the patient"
+    });
+});
 
 module.exports = {
     doctorRouter : doctorRouter
 }
+
