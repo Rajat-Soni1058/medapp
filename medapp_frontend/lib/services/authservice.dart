@@ -15,7 +15,7 @@ class AuthService {
         'email': email,
         'password': password,
       });
-      print('Login response: $response');
+      //print('Login response: $response');
 
       if (response.containsKey('token')) {
         await TokenStorage.saveAuth(
