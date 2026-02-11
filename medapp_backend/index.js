@@ -7,6 +7,7 @@ const mongoose=require("mongoose")
 const handlePatientRoute = require("./routes/patient.js")
 const { doctorRouter } = require("./routes/doctor.js")
 const handlePayment=require("./routes/payment.js")
+const handlePeopleNo=require("./routes/NumberOfPeople.js")
 
 // database connection----------->
 mongoose.connect("mongodb+srv://orbital:orbital1058@cluster0.ediaafr.mongodb.net/MedApp").then(()=>{
@@ -15,13 +16,11 @@ mongoose.connect("mongodb+srv://orbital:orbital1058@cluster0.ediaafr.mongodb.net
     console.error("database error occured", err);
   });
 
-  //middleware-------------->
+//middleware-------------->
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
 // route for home ----->
-app.get("/", (req, res) => {
-  res.status(200).send("MedApp Backend is running");
-});
+app.get("/",handlePeopleNo);
 
 //Route---------->
 app.use("/patient",handlePatientRoute);
@@ -29,9 +28,6 @@ app.use("/patient",handlePatientRoute);
 app.use("/doctor", doctorRouter);
 // razorpay payment route ----------->
 app.use("/payment",handlePayment);
-
-
-
 
 
 
