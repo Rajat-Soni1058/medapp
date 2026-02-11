@@ -1,0 +1,109 @@
+import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
+import '../../services/apiservice.dart';
+import '../../services/tokenstorage.dart';
+import '../../doctor/providers/consultationmodel.dart';
+import '../../models/doctor_model.dart';
+
+class Patientrepo {
+  final ApiService pas = ApiService();
+  static const String baseUrl = 'https://consultone-six3.onrender.com';
+
+  Future<List<Consultationmodel>> getunresolved() async {
+    final token = await TokenStorage.getToken();
+    final response = await pas.get('/patient/unresolved', token: token);
+    final list = response['unResolveDocs'] as List;
+    return list.map((e) => Consultationmodel.fromJson(e)).toList();
+  }
+
+  Future<List<Consultationmodel>> getresolved() async {
+    final token = await TokenStorage.getToken();
+    final response = await pas.get('/patient/resolved', token: token);
+    final list = response['ResolveDocs'] as List;
+    return list.map((e) => Consultationmodel.fromJson(e)).toList();
+  }
+
+  Future<Consultationmodel> getconsult(String consultId) async {
+    final token = await TokenStorage.getToken();
+    final response = await pas.get('/patient/showform/$consultId', token: token);
+    return Consultationmodel.fromJson(response['full']);
+  }
+
+  Future<List<DoctorModel>> getDoctorsBySpeciality(String speciality) async {
+    final token = await TokenStorage.getToken();
+    final response = await pas.get('/patient/$speciality', token: token);
+    final list = response['Doclist'] as List;
+    return list.map((e) => DoctorModel.fromJson(e)).toList();
+  }
+
+  Future<Map<String, dynamic>> submitForm({
+    required String doctorId,
+    required String fullName,
+    required String age,
+    required String gender,
+    required String contactNo,
+    required String problem,
+    required String lifeStyle,
+    required String type,
+    File? file,
+  }) async {
+    try {
+      final token = await TokenStorage.getToken();
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/patient/form/$doctorId'),
+      );
+
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+
+      request.fields['full_name'] = fullName;
+      request.fields['age'] = age;
+      request.fields['gender'] = gender;
+      request.fields['contactNo'] = contactNo;
+      request.fields['Problem'] = problem;
+      request.fields['life_style'] = lifeStyle;
+      request.fields['type'] = type;
+
+      if (file != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'patientForm',
+            file.path,
+            filename: path.basename(file.path),
+          ),
+        );
+      }
+
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 60),
+        onTimeout: () => throw Exception('Request timed out'),
+      );
+
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode >= 400) {
+        try {
+          final e = jsonDecode(response.body) as Map<String, dynamic>;
+          throw Exception(e['msg'] ?? e['message'] ?? e['error'] ?? 'Unknown error');
+        } catch (_) {
+          throw Exception('${response.statusCode} ${response.body}');
+        }
+      }
+
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('Failed to submit form: $e');
+    }
+  }
+
+  Future<String> getEmergencyMaskedNumber(String consultId) async {
+    final token = await TokenStorage.getToken();
+    final response = await pas.get('/patient/emergency/masked/$consultId', token: token);
+    return response['maskedNumber'] ?? '';
+  }
+}
