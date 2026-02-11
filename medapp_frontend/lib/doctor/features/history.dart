@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medapp_frontend/doctor/components/doctors_patient_hsitory_card.dart';
+import 'package:medapp_frontend/doctor/providers/doctor_history_provider.dart';
 
-class DoctorsPatientHistory extends StatefulWidget {
+class DoctorsPatientHistory extends ConsumerStatefulWidget {
   const DoctorsPatientHistory({super.key});
 
   @override
-  State<DoctorsPatientHistory> createState() => _DoctorsPatientHistoryState();
+  ConsumerState<DoctorsPatientHistory> createState() =>
+      _DoctorsPatientHistoryState();
 }
 
-class _DoctorsPatientHistoryState extends State<DoctorsPatientHistory>
+class _DoctorsPatientHistoryState extends ConsumerState<DoctorsPatientHistory>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      setState(() {});//setstate used instead of riverpod
-    });
   }
 
   @override
@@ -29,6 +29,12 @@ class _DoctorsPatientHistoryState extends State<DoctorsPatientHistory>
 
   @override
   Widget build(BuildContext context) {
+
+    final allCases = ref.watch(allcasesProvider);
+    final emergencyCases = ref.watch(emergencyProvider);
+    final normalCases = ref.watch(normalCaseProvider);
+
+
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 235, 235, 235),
       body: Stack(
@@ -42,21 +48,25 @@ class _DoctorsPatientHistoryState extends State<DoctorsPatientHistory>
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
-                    children: [buildlist('all cases'), buildlist('emergency'),buildlist('normal')],
+                    children: [
+                      buildlist(allCases),
+                      buildlist(emergencyCases),
+                      buildlist(normalCases),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
           //below list part ends
-    
+
           //custom app bar
           Container(
             height: 235,
             color: Colors.white,
             child: Column(
               children: [
-                SizedBox(height: 25,),
+                SizedBox(height: 25),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -121,7 +131,15 @@ class _DoctorsPatientHistoryState extends State<DoctorsPatientHistory>
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(50),
                             border: (_tabController.index != 0)
-                                ? Border.all(width: 1.5,color: const Color.fromARGB(255, 199, 199, 199))
+                                ? Border.all(
+                                    width: 1.5,
+                                    color: const Color.fromARGB(
+                                      255,
+                                      199,
+                                      199,
+                                      199,
+                                    ),
+                                  )
                                 : null,
                           ),
                           child: Center(child: Text('All Cases')),
@@ -133,12 +151,20 @@ class _DoctorsPatientHistoryState extends State<DoctorsPatientHistory>
                       width: 100,
                       child: Tab(
                         child: Container(
-                           height: 40,
+                          height: 40,
                           width: 100,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(50),
                             border: (_tabController.index != 1)
-                                ? Border.all(width: 1.5,color: const Color.fromARGB(255, 199, 199, 199))
+                                ? Border.all(
+                                    width: 1.5,
+                                    color: const Color.fromARGB(
+                                      255,
+                                      199,
+                                      199,
+                                      199,
+                                    ),
+                                  )
                                 : null,
                           ),
                           child: Center(child: Text('Emergency')),
@@ -155,7 +181,15 @@ class _DoctorsPatientHistoryState extends State<DoctorsPatientHistory>
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(50),
                             border: (_tabController.index != 2)
-                                ? Border.all(width: 1.5,color: const Color.fromARGB(255, 199, 199, 199))
+                                ? Border.all(
+                                    width: 1.5,
+                                    color: const Color.fromARGB(
+                                      255,
+                                      199,
+                                      199,
+                                      199,
+                                    ),
+                                  )
                                 : null,
                           ),
                           child: Center(child: Text('Normal')),
@@ -174,29 +208,26 @@ class _DoctorsPatientHistoryState extends State<DoctorsPatientHistory>
   }
 }
 
-Widget buildlist(String cases) {
-  return ListView(
-    padding: const EdgeInsets.only(top: 16),
-    children: [
-      if (cases == 'all cases')
-        DPHcard(
-          caseType: 'emergency',
-          datetime: DateTime.now(),
-          name: 'Raj Gupta',
-        )
-      else if (cases == 'emergency')
-        DPHcard(
-          caseType: 'emergency',
-          datetime: DateTime.now(),
-          name: 'Utkarsh Rastogi',
-        )
-      else
-        DPHcard(
-          caseType: 'normal',
-          datetime: DateTime.now(),
-          name: 'Rajat Soni',
-        ),
-    ],
+Widget buildlist(AsyncValue<List<dynamic>> asyncCases) {
+  return asyncCases.when(
+    data: (cases) {
+      if (cases.isEmpty) {
+        return const Center(child: Text("No Cases Found"));
+      }
+      return ListView.builder(
+        padding: const EdgeInsets.only(top: 16),
+        itemCount: cases.length,
+        itemBuilder: (context, index) {
+          final caseItem = cases[index];
+          return DPHcard(
+            caseType: caseItem["type"],
+            datetime: DateTime.parse(caseItem["createdAt"]),
+            name: caseItem["full_name"],
+          );
+        },
+      );
+    },
+    error: (err, _) => Center(child: Text("Error: $err")),
+    loading: () => const Center(child: CircularProgressIndicator()),
   );
 }
-
