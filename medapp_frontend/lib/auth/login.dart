@@ -7,6 +7,7 @@ import 'package:medapp_frontend/doctor/features/history.dart';
 import 'package:medapp_frontend/providers/auth_provider.dart';
 import 'package:medapp_frontend/doctor/features/home.dart';
 import 'package:medapp_frontend/patient/features/home.dart';
+import 'package:medapp_frontend/doctor/providers/doctorprovider.dart';
 class Login extends ConsumerStatefulWidget {
   final bool isDoctor;
 
@@ -37,9 +38,15 @@ final loginpassCtrl = TextEditingController();
           loginpassCtrl.text.trim(),
           widget.isDoctor,
   );
+  
   if(mounted) {
     final authstate=ref.read(authProvider);
     if(authstate.isAuthenticated) {
+      // Refresh doctor name provider if it's a doctor login
+      if (widget.isDoctor) {
+        ref.invalidate(doctorNameProvider);
+      }
+      
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (_) =>

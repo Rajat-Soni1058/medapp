@@ -1,7 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'docrepo.dart';
 import './consultationmodel.dart';
+import '../../services/tokenstorage.dart';
+
 final docrepoprovider= Provider((ref)=>DocRepo());
+
+final doctorNameProvider = FutureProvider<String>((ref) async {
+  final name = await TokenStorage.getUserName();
+  return name ?? 'Doctor';
+});
+
 final normalcasesprovider=FutureProvider<List<Consultationmodel>> ((ref) async {
   return ref.watch(docrepoprovider).getnormal();
 
