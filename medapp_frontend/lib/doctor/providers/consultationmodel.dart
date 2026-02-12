@@ -38,8 +38,8 @@ class Consultationmodel {
   factory Consultationmodel.fromJson(Map<String, dynamic> json) {
     return Consultationmodel(
       id: json['_id'] ?? '',
-      doctorId: json['doctor_id'] is String 
-          ? json['doctor_id'] 
+      doctorId: json['doctor_id'] is String
+          ? json['doctor_id']
           : (json['doctor_id']?['_id'] ?? ''),
       patientId: json['patient_id'] ?? '',
       fullName: json['full_name'] ?? '',
@@ -52,10 +52,16 @@ class Consultationmodel {
       status: json['status'] ?? 'pending',
       doctorFileUrl: json['doctorFileUrl'],
       patientFileUrl: json['patientFileUrl'],
-      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
-      doctor: json['doctor_id'] is Map 
-          ? DoctorInfo.fromJson(json['doctor_id']) 
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
+
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.now(),
+
+      doctor: json['doctor_id'] is Map
+          ? DoctorInfo.fromJson(json['doctor_id'])
           : null,
     );
   }
@@ -68,9 +74,6 @@ class DoctorInfo {
   DoctorInfo({required this.name, required this.speciality});
 
   factory DoctorInfo.fromJson(Map<String, dynamic> json) {
-    return DoctorInfo(
-      name: json['name'] ?? '',
-      speciality: json['speciality'] ?? '',
-    );
+    return DoctorInfo(name: json['name'], speciality: json['speciality']);
   }
 }

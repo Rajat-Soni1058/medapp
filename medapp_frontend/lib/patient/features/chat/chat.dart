@@ -1,25 +1,21 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class ChatScreen extends StatelessWidget {
-  final String caseType;
-  final String doctorName;
-  final String patientName;
-  final bool isReplied;
-  //final DateTime datetime;
-  //final patient form
-  //final doctor prescription
-  const ChatScreen({
+import 'package:medapp_frontend/doctor/providers/consultationmodel.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class ChatScreen extends ConsumerWidget {
+  final Consultationmodel consultation;
+  ChatScreen({
     super.key,
     // in future make them all as required for testing purpose its hardcoded
-    this.caseType = "normal",
-    this.doctorName = "Dr.Name",
-    this.patientName = "Kumar Sahil",
-     this.isReplied = false,
+    required this.consultation,
   });
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 235, 235, 235),
       appBar: AppBar(
@@ -28,10 +24,10 @@ class ChatScreen extends StatelessWidget {
         automaticallyImplyLeading: true,
         //doctor name
         title: Text(
-          doctorName,
+          consultation.doctor?.name ?? "Doctor",
           style: GoogleFonts.manrope(fontWeight: FontWeight.bold, fontSize: 20),
         ),
-        actions: (caseType == 'normal')
+        actions: (consultation.type == 'normal')
             ? null
             : [
                 IconButton(onPressed: () {}, icon: Icon(Icons.video_call)),
@@ -77,7 +73,7 @@ class ChatScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            patientName,
+                            consultation.fullName,
                             style: GoogleFonts.manrope(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
@@ -88,7 +84,7 @@ class ChatScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 20),
                       Text(
-                        'Date & Time:  ${DateTime.now()}',
+                        'Date & Time:  ${DateFormat("dd MMM yyyy, hh:mm a").format(consultation.createdAt)}',
                         style: GoogleFonts.manrope(
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
@@ -106,8 +102,12 @@ class ChatScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 10),
                       InkWell(
-                        onTap: () {
-                          //form open
+                        onTap:
+                          consultation.patientFileUrl == null ? null:(){
+                          final url =
+                              "https://consultone-six3.onrender.com/${consultation.patientFileUrl}";
+                          launchUrl(Uri.parse(url));
+                          
                         },
                         child: Container(
                           height: 100,
@@ -127,102 +127,119 @@ class ChatScreen extends StatelessWidget {
               SizedBox(height: 30),
 
               //Doctors'prescription
-              (isReplied == true)?
-              Container(
-                // height: 301,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(width: 3, color: Colors.green),
-                  borderRadius: BorderRadius.circular(20),
-                  color: Colors.white,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Doctor's Prescription",
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.green,
-                        ),
+              (consultation.status == "responded")
+                  ? Container(
+                      // height: 301,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        border: Border.all(width: 3, color: Colors.green),
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white,
                       ),
-                      SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Digital Prescription",
-                            style: GoogleFonts.manrope(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Doctor's Prescription",
+                              style: GoogleFonts.manrope(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Colors.green,
+                              ),
                             ),
-                          ),
-                          Container(
-                            height: 50,
-                            width: 50,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              color: Colors.green.withOpacity(0.5),
+                            SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Digital Prescription",
+                                  style: GoogleFonts.manrope(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Container(
+                                  height: 50,
+                                  width: 50,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: Colors.green.withOpacity(0.5),
+                                  ),
+                                  child: Icon(
+                                    Icons.healing,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ],
                             ),
-                            child: Icon(Icons.healing, color: Colors.green),
+                            SizedBox(height: 20),
+                            Text(
+                              'Date & Time:  ${DateFormat("dd MMM yyyy, hh:mm a").format(consultation.createdAt)}',
+                              style: GoogleFonts.manrope(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              'Attached file: ',
+                              style: GoogleFonts.manrope(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Colors.black,
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            InkWell(
+                              onTap: consultation.patientFileUrl == null ? null: () {
+                                final url =
+                                    "https://consultone-six3.onrender.com/${consultation.doctorFileUrl}";
+                                launchUrl(Uri.parse(url));
+                              },
+                              child: Container(
+                                height: 120,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  color: const Color.fromARGB(
+                                    255,
+                                    235,
+                                    235,
+                                    235,
+                                  ),
+                                ),
+                                child: Icon(Icons.remove_red_eye),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  //if no reply blank container
+                  : Container(
+                      height: 301,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        border: Border.all(width: 3, color: Colors.red),
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '❌ NO RESPONSE YET ❌',
+                          style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            color: Colors.red,
                           ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        'Date & Time:  ${DateTime.now()}',
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.grey,
                         ),
                       ),
-                      SizedBox(height: 20),
-                      Text(
-                        'Attached file: ',
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      InkWell(
-                        onTap: () {
-                          //file open
-                        },
-                        child: Container(
-                          height: 120,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: const Color.fromARGB(255, 235, 235, 235),
-                          ),
-                          child: Icon(Icons.remove_red_eye),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-              //if no reply blank container
-              :Container(
-                height: 301,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(width: 3, color: Colors.red),
-                  borderRadius: BorderRadius.circular(20),
-                  color: Colors.white,
-                ),
-                child: Center(
-                  child: Text('❌ NO RESPONSE YET ❌',style: GoogleFonts.manrope(fontWeight: FontWeight.bold,fontSize: 20,color: Colors.red),),
-                ),
-              ),
-              SizedBox(height: 30,),
+                    ),
+              SizedBox(height: 30),
               SizedBox(
                 height: 50,
                 width: double.infinity,
@@ -233,7 +250,7 @@ class ChatScreen extends StatelessWidget {
                   onPressed: () {
                     //future rebook function
                   },
-                
+
                   child: Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Text(
