@@ -52,23 +52,23 @@ class _MainAppState extends ConsumerState<MainApp> {
     return MaterialApp(
       theme: ThemeData.light(),
       debugShowCheckedModeBanner: false,
-      home: DoctorsPatientHistory(),
-    //authState.isLoading 
-    //       ? Scaffold(
-    //           body: Center(
-    //             child: Column(
-    //               mainAxisAlignment: MainAxisAlignment.center,
-    //               children: const [
-    //                 CircularProgressIndicator(),
-    //                 SizedBox(height: 20),
-    //                 Text('Loading...', style: TextStyle(fontSize: 16)),
-    //               ],
-    //             ),
-    //           ),
-    //         )
-    //       : (authState.isAuthenticated 
-    //           ? (authState.role == 'doctor' ? DoctorHome() : DoctorsPatientHistory()) 
-    //           : const CommonStart()), 
+      home: 
+    authState.isLoading 
+          ? Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 20),
+                    Text('Loading...', style: TextStyle(fontSize: 16)),
+                  ],
+                ),
+              ),
+            )
+          : (authState.isAuthenticated 
+              ? (authState.role == 'doctor' ? DoctorHome() : DoctorsPatientHistory()) 
+              : const CommonStart()), 
     );
   }
 }

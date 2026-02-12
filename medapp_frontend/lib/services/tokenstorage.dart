@@ -9,14 +9,16 @@ class TokenStorage{
   );
   static const _tokenKey = 'auth_token';
   static const _roleKey = 'user_role';
+  static const _nameKey = 'user_name';
 
 
-  static Future<void> saveAuth({required String token, required String role}) async {
+  static Future<void> saveAuth({required String token, required String role, String? name}) async {
     await clearAuth(); 
     
     await Future.wait([
       _storage.write(key: _tokenKey, value: token),
       _storage.write(key: _roleKey, value: role),
+      if (name != null) _storage.write(key: _nameKey, value: name),
     ]);
   }
   
@@ -38,6 +40,15 @@ class TokenStorage{
       return await _storage.read(key: _roleKey);
     } catch (e) {
       print('Error reading role: $e');
+      return null;
+    }
+  }
+
+  static Future<String?> getUserName() async {
+    try {
+      return await _storage.read(key: _nameKey);
+    } catch (e) {
+      print('Error reading name: $e');
       return null;
     }
   }
