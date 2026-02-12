@@ -1,17 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:medapp_frontend/doctor/providers/consultationmodel.dart';
+import 'package:medapp_frontend/patient/features/chat/chat.dart';
 import 'package:medapp_frontend/patient/features/patientHistory/components/PVHCard.dart';
+import 'package:medapp_frontend/patient/providers/patient_provider.dart';
 
-class PatientHistory extends StatefulWidget {
+class PatientHistory extends ConsumerStatefulWidget {
   const PatientHistory({super.key});
 
   @override
-  State<PatientHistory> createState() => _PatientHistoryState();
+  ConsumerState<PatientHistory> createState() => _PatientHistoryState();
 }
 
-class _PatientHistoryState extends State<PatientHistory>
+class _PatientHistoryState extends ConsumerState<PatientHistory>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  Widget buildlist(AsyncValue<List<Consultationmodel>> asyncCases) {
+  return asyncCases.when(
+    data: (cases) {
+      if (cases.isEmpty) {
+        return const Center(child: Text('No History Found'));
+      }
+      return RefreshIndicator(
+        onRefresh: ()async{
+          ref.refresh(patientCompletedProvider);
+          ref.refresh(patientPendingProvider);
+        },
+        child: ListView.builder(
+          padding: const EdgeInsets.only(top: 16),
+          itemCount: cases.length,
+          itemBuilder: (context, index) {
+            final consultation = cases[index];
+            return PVHCard(
+              statusType: consultation.status == 'responded'
+                  ? "completed"
+                  : "cancelled",
+              datetime: consultation.createdAt,
+              name: consultation.fullName,
+              navigateTo: ChatScreen(consultation: consultation),
+            );
+          },
+        ),
+      );
+    },
+    error: (e, _) {
+      return Center(child: Text("Error: $e"));
+    },
+    loading: () {
+      return SizedBox(
+        height: 40,
+        width: 40,
+        child: CircularProgressIndicator());
+    },
+  );
+}
 
   @override
   void initState() {
@@ -43,7 +87,10 @@ class _PatientHistoryState extends State<PatientHistory>
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
-                    children: [buildlist('Completed'), buildlist('Cancelled')],
+                    children: [
+                      buildlist(ref.watch(patientCompletedProvider)),
+                      buildlist(ref.watch(patientPendingProvider)),
+                    ],
                   ),
                 ),
               ],
@@ -127,8 +174,13 @@ class _PatientHistoryState extends State<PatientHistory>
                                 'Completed',
                                 style: TextStyle(
                                   color: (_tabController.index == 0)
-                                      ?  Colors.blue
-                                      : const Color.fromARGB(255, 123, 123, 123),
+                                      ? Colors.blue
+                                      : const Color.fromARGB(
+                                          255,
+                                          123,
+                                          123,
+                                          123,
+                                        ),
                                 ),
                               ),
                             ),
@@ -142,7 +194,12 @@ class _PatientHistoryState extends State<PatientHistory>
                                 style: TextStyle(
                                   color: (_tabController.index == 1)
                                       ? Colors.red
-                                      : const Color.fromARGB(255, 123, 123, 123),
+                                      : const Color.fromARGB(
+                                          255,
+                                          123,
+                                          123,
+                                          123,
+                                        ),
                                 ),
                               ),
                             ),
@@ -160,22 +217,5 @@ class _PatientHistoryState extends State<PatientHistory>
     );
   }
 }
-Widget buildlist(String status) {
-  return ListView(
-    padding: const EdgeInsets.only(top: 16),
-    children: [
-      if (status == 'Completed')
-        PVHCard(
-          statusType: 'completed',
-          datetime: DateTime.now(),
-          name: 'Raj Gupta',
-        )
-      else
-        PVHCard(
-          statusType: 'cancelled',
-          datetime: DateTime.now(),
-          name: 'Rajat Soni',
-        ),
-    ],
-  );
-}
+
+
