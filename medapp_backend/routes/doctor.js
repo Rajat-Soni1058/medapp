@@ -136,7 +136,8 @@ doctorRouter.post("/signin", async function(req,res){
         const token = createToken(doctor)
 
         return res.json({
-            token : token
+            token : token,
+            doctorName: doctor.name
         })
     }
     else{

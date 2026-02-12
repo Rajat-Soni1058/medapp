@@ -15,13 +15,24 @@ class AuthService {
         'email': email,
         'password': password,
       });
-      //print('Login response: $response');
+      print('Login response: $response');
+      print('Response keys: ${response.keys}');
+      print('Response doctorName value: ${response['doctorName']}');
 
       if (response.containsKey('token')) {
+        final doctorName = isDoctor ? response['doctorName'] : null;
+        print('Saving auth - Token exists: true, isDoctor: $isDoctor, doctorName: $doctorName');
+        
         await TokenStorage.saveAuth(
           token: response['token'],
           role: isDoctor ? 'doctor' : 'patient',
+          name: doctorName,
         );
+        
+        // Verify the name was saved
+        final savedName = await TokenStorage.getUserName();
+        print('Name saved to storage: $savedName');
+        
         return null; // Success
       } else {
         return response['msg'] ?? response['error'] ?? 'Login failed';
