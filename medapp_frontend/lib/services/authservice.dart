@@ -35,11 +35,17 @@ class AuthService {
         
         return null; // Success
       } else {
-        return response['msg'] ?? response['error'] ?? 'Login failed';
+        final errorMsg = response['msg'] ?? response['error'] ?? 'Login failed';
+        print('Login failed: $errorMsg');
+        return errorMsg;
       }
     } catch (e) {
-      print('Login error: $e');
-      return e.toString().replaceAll('Exception: ', '').replaceAll('Failed to post: ', '');
+      print('Login error caught: $e');
+      final errorMessage = e.toString()
+          .replaceAll('Exception: ', '')
+          .replaceAll('Failed to post: ', '');
+      print('Processed error message: $errorMessage');
+      return errorMessage;
     }
   }
 
