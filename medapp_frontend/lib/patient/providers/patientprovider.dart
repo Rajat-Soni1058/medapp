@@ -15,7 +15,7 @@ class DoctorState {
     this.doctors = const [],
     this.isLoading = false,
     this.error,
-  });
+  }); 
 
   DoctorState copyWith({
     DoctorModel? selectedDoctor,

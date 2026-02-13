@@ -52,7 +52,7 @@ class _MainAppState extends ConsumerState<MainApp> {
     return MaterialApp(
       theme: ThemeData.light(),
       debugShowCheckedModeBanner: false,
-      home: PatientForm()
+      home: PatientHome()
     //authState.isLoading 
     //       ? Scaffold(
     //           body: Center(
