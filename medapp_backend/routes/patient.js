@@ -7,17 +7,41 @@ const {DoctorModel}=require("../model/doctorModel.js")
 const Consultation=require("../model/consultationModel")
 const multer  = require('multer')
 const router=express.Router();
-const mongoose = require("mongoose");
-// Multer diskStorage----->
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    return cb(null,"./uploads/patient")///destination ,patient ka form kaha ja raha hai 
-  },
-  filename: function (req, file, cb) {
-    return cb(null,`${Date.now()}-${file.originalname}`);// name of the file
-  }
-})
-const upload=multer({storage:storage})
+const cloudinary =require("../configuration/cloudinary.js")
+const streamifier = require("streamifier");// for clodinary
+
+// Multer diskStorage---------------
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     return cb(null,"./uploads/patient")///destination ,patient ka form kaha ja raha hai 
+//   },
+//   filename: function (req, file, cb) {
+//     return cb(null,`${Date.now()}-${file.originalname}`);// name of the file
+//   }
+// })
+// const upload=multer({storage:storage})
+//---------------------------------
+
+const storage = multer.memoryStorage();// ye RAM me store karta hai file ke binary form ko 
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // max size 10MB ho sakta hai 
+});
+
+// cloudinary building pipeline connection for uploading the file -->
+const uploadToCloudinary = (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(//Open upload connection to Cloudinary inside this folder-->
+      { folder },
+      (error, result) => {
+        if (result) resolve(result);
+        else reject(error);
+      }
+    );
+
+streamifier.createReadStream(buffer).pipe(stream);//convert binary file data into readable stream and then send gradually to connected stream --^
+  });
+};
 
 // signup of patient ---------->
 router.route("/signup").post(async(req,res)=>{
@@ -96,13 +120,18 @@ router.route("/form/:doc_id").post(checkValidPatient,upload.single("patientForm"
  const {full_name,age,gender,contactNo,Problem,life_style,type}=req.body;
  const doctor_id= req.params.doc_id;
  if(!doctor_id){
-    return res.json({error:"doctoe id not given"})
+    return res.json({error:"doctor id not given"})
  }
  const patient_id=req.patient.id;
 
- const patientFileUrl = req.file
-        ? `uploads/patient/${req.file.filename}`
-        : undefined;
+//------cloudinary code below ------------//
+ let patientFileUrl;
+
+if (req.file) {// cloudResult is js object contain many key value 
+ const cloudResult = await uploadToCloudinary(req.file.buffer,"patient_uploads" );
+ patientFileUrl = cloudResult.secure_url;
+      }
+//---------------------------------------//
  const con=await Consultation.create({
     full_name,
     age,
@@ -118,6 +147,7 @@ patientFileUrl,
  return res.status(200).json({msg:con})
 })
 
+// route for calling a doctor ------------>
 router.route("/emergency/masked/:consultId")
 .get(checkValidPatient, async (req, res) => {
 
