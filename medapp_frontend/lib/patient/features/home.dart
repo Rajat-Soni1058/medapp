@@ -2,8 +2,14 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:medapp_frontend/models/doctor_model.dart';
+import 'package:medapp_frontend/models/soctype-symptom.dart';
+import 'package:medapp_frontend/patient/features/patientForm/components/doctorcard.dart';
 import 'package:medapp_frontend/patient/features/bmifeat.dart';
 import 'package:medapp_frontend/patient/providers/patient_provider.dart';
+import 'package:medapp_frontend/patient/providers/patientprovider.dart';
+import 'package:medapp_frontend/providers/auth_provider.dart';
+import 'package:medapp_frontend/auth/common_start.dart';
 import 'package:medapp_frontend/theme/colors.dart';
 //import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,7 +56,7 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
         "Headache",
         "Dizziness",
         "Numbness or tingling",
-        "Weakness",
+       // "Weakness",
         "Memory problems",
         "Difficulty concentrating",
         "Seizures",
@@ -62,19 +68,45 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
           "Muscle pain",
           "Swelling",
           "Stiffness",
-          "Limited range of motion",
-          "Numbness or tingling",
-          "Weakness",
+          "Limited Motion",
+          "Numbness",
+          //"Weakness",
           "Deformity"
     
   ]; 
   final TextEditingController _searchController = TextEditingController();
   List<String> filteredSymptoms = [];
+  String _selectedSymptom = 'All';
 
   @override
   void initState() {
     super.initState();
     filteredSymptoms = symptoms;
+    // Load all doctors by default
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(doctorProvider.notifier).loadAllDoctors();
+    });
+  }
+
+  void _filterDoctors() async {
+    if (_selectedSymptom == 'All') {
+      // Load all doctors when All is selected
+      await ref.read(doctorProvider.notifier).loadAllDoctors();
+    } else {
+      final docSymptomMap = doctypesymptom();
+      Set<String> targetSpecialities = {};
+      
+      docSymptomMap.symptoms.forEach((speciality, symptomList) {
+        if (symptomList.any((s) => s.toLowerCase() == _selectedSymptom.toLowerCase())) {
+          targetSpecialities.add(speciality);
+        }
+      });
+
+      // Load doctors for the first matching speciality
+      if (targetSpecialities.isNotEmpty) {
+        await ref.read(doctorProvider.notifier).loadDoctors(targetSpecialities.first);
+      }
+    }
   }
 
   void _filterSymptoms(String query) {
@@ -89,6 +121,7 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
       }
     });
   }
+  
 
   @override
   void dispose() {
@@ -98,7 +131,18 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
 
   @override
   Widget build(BuildContext context) {
-
+  final docs  = ref.watch(doctorProvider);
+  // List<DoctorModel> filterDoctors(String symptom) {
+  //    List<DoctorModel> filteredocs = [];
+  //    if(docs is List<DoctorModel>) {
+  //      for(DoctorModel doc in docs as List<DoctorModel>) {
+  //        if(doc.speciality.contains(symptom)) {
+  //          filteredocs.add(doc);
+  //        }
+  //      }
+  //    }
+  //    return filteredocs;
+  // };
     return Scaffold(
       backgroundColor: themeColors.bgColor,
       body: SafeArea(
@@ -116,7 +160,11 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
                       children: [
                         CircleAvatar(
                           radius: 20.0,
-                          backgroundImage: AssetImage('assets/images/image.png'),
+                         child: Icon(
+                            Icons.person,
+                            color: Colors.white,
+                          ),
+                          backgroundColor: Colors.blue,
                         ),
                         SizedBox(width: 10.0),
                         Column(
@@ -125,20 +173,14 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
                             Text(
                               'Welcome ',
                               style: GoogleFonts.poppins(
-                                fontSize: 10.0,
+                                fontSize: 16.0,
                                 //fontWeight: //FontWeight.bold,
                               ),
                             ),
-                            Text(
-                              'Dallu',
-                              style: GoogleFonts.poppins(
-                                fontSize: 20.0,
-                                fontWeight: FontWeight.normal,
-                              ),
-                            ),
+                           
                           ],
                         ),
-                        SizedBox(width: 200),
+                        SizedBox(width: 160),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -205,8 +247,8 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
                       child: Row(
                         children: [
                           if (_searchController.text.isEmpty)
-                            symptomsCard('All', Colors.blue, Colors.white),
-                          ...List.generate(filteredSymptoms.length, (i) => symptomsCard(filteredSymptoms[i],  Colors.white, const Color.fromARGB(255, 64, 64, 64))),
+                            symptomsCard('All'),
+                          ...List.generate(filteredSymptoms.length, (i) => symptomsCard(filteredSymptoms[i])),
                         ],
                       ),
                     ),
@@ -300,7 +342,64 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
                           ),
                         ),
                       ),
-                      )
+                      ),
+                      SizedBox(height: 20.0),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Top Doctors",
+                           style: GoogleFonts.poppins(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 15.0),
+                      docs.isLoading
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
+                        : docs.error != null
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Text(
+                                  docs.error!,
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            )
+                          : docs.doctors.isEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Text(
+                                    'No doctors found',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                physics: NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemCount: docs.doctors.length,
+                                itemBuilder: (context, index) {
+                                  final doc = docs.doctors[index];
+                                  return doctorcard(
+                                    doctorname: doc.name,
+                                    doctortype: doc.speciality,
+                                    doctorrating: "4.8", 
+                                  );
+                                },
+                              ),
+
+
                   ],
                ),
              ),
@@ -309,29 +408,41 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
       ),
     );
   }
-  Widget symptomsCard(String symptom, Color color, Color textcolor){
-    return SizedBox(
-      height : 50,
-      width: 100,
-      child: Card(
-        color: color,
-         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                symptom, 
-                style: TextStyle(
-                  color: textcolor,
-                  fontFamily: GoogleFonts.manrope().fontFamily,
+  Widget symptomsCard(String symptom){
+    bool isSelected = _selectedSymptom == symptom;
+    Color color = isSelected ? Colors.blue : Colors.white;
+    Color textcolor = isSelected ? Colors.white : const Color.fromARGB(255, 64, 64, 64);
+    
+    return GestureDetector(
+      onTap: (){
+        setState(() {
+          _selectedSymptom = symptom;
+        });
+        _filterDoctors();
+      },
+      child: SizedBox(
+        height : 50,
+        width: 100,
+        child: Card(
+          color: color,
+           shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  symptom, 
+                  style: TextStyle(
+                    color: textcolor,
+                    fontFamily: GoogleFonts.manrope().fontFamily,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.visible,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.visible,
               ),
             ),
-          ),
+        ),
       ),
     );
   }

@@ -32,10 +32,51 @@ class Patientrepo {
   }
 
   Future<List<DoctorModel>> getDoctorsBySpeciality(String speciality) async {
-    final token = await TokenStorage.getToken();
-    final response = await pas.get('/patient/$speciality', token: token);
-    final list = response['Doclist'] as List;
-    return list.map((e) => DoctorModel.fromJson(e)).toList();
+    try {
+      final token = await TokenStorage.getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('401: No authentication token found');
+      }
+      final response = await pas.get('/patient/$speciality', token: token);
+      final list = response['Doclist'] as List;
+      return list.map((e) => DoctorModel.fromJson(e)).toList();
+    } catch (e) {
+      if (e.toString().contains('401') || e.toString().toLowerCase().contains('unauthorized')) {
+        throw Exception('401: Session expired or invalid token');
+      }
+      rethrow;
+    }
+  }
+
+  Future<List<DoctorModel>> getAllDoctors() async {
+    try {
+      final token = await TokenStorage.getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('401: No authentication token found');
+      }
+      
+      // Fetch doctors from all specialities
+      final specialities = ['Cardiologist', 'Dermatologist', 'General Physician', 'Neurologist', 'Orthopedist'];
+      final allDoctors = <DoctorModel>[];
+      
+      for (final speciality in specialities) {
+        try {
+          final response = await pas.get('/patient/$speciality', token: token);
+          final list = response['Doclist'] as List;
+          allDoctors.addAll(list.map((e) => DoctorModel.fromJson(e)));
+        } catch (e) {
+          // Continue fetching other specialities even if one fails
+          continue;
+        }
+      }
+      
+      return allDoctors;
+    } catch (e) {
+      if (e.toString().contains('401') || e.toString().toLowerCase().contains('unauthorized')) {
+        throw Exception('401: Session expired or invalid token');
+      }
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> submitForm({
