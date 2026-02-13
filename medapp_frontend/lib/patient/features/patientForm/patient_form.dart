@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:medapp_frontend/models/doctor_model.dart';
 import 'package:medapp_frontend/patient/features/patientForm/forms/emergency_form.dart';
 import 'package:medapp_frontend/patient/features/patientForm/forms/normal_form.dart';
+import 'package:medapp_frontend/patient/providers/patientprovider.dart';
 
-class PatientForm extends StatefulWidget {
-  const PatientForm({super.key});
+class PatientForm extends ConsumerStatefulWidget {
+  final DoctorModel doctor;
+  const PatientForm({super.key, required this.doctor});
 
   @override
-  State<PatientForm> createState() => _PatientFormState();
+  ConsumerState<PatientForm> createState() => _PatientFormState();
 }
 
-class _PatientFormState extends State<PatientForm> with SingleTickerProviderStateMixin{
+class _PatientFormState extends ConsumerState<PatientForm> with SingleTickerProviderStateMixin{
     late TabController _tabController;
     @override
   void initState() {
@@ -28,6 +32,7 @@ class _PatientFormState extends State<PatientForm> with SingleTickerProviderStat
   }
   @override
   Widget build(BuildContext context) {
+    final selecteddoc = ref.watch(doctorProvider);
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 235, 235, 235),
       body: Stack(
@@ -42,7 +47,7 @@ class _PatientFormState extends State<PatientForm> with SingleTickerProviderStat
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
-                    children: [NormalForm(),EmergencyForm()],
+                    children: [NormalForm(doctor: widget.doctor),EmergencyForm(doctor: widget.doctor)],
                   ),
                 ),
               ],
@@ -89,8 +94,8 @@ class _PatientFormState extends State<PatientForm> with SingleTickerProviderStat
                     //
                     child: Column(
                       children: [
-                        Text('Dr.Sarah Jenkins',style: GoogleFonts.manrope(fontWeight: FontWeight.bold,fontSize: 20),),
-                        Text('Cardiologist',style: GoogleFonts.manrope(fontWeight: FontWeight.bold,fontSize: 14,color: Colors.blue),),
+                        Text('Dr.${widget.doctor.name}',style: GoogleFonts.manrope(fontWeight: FontWeight.bold,fontSize: 20),),
+                        Text(widget.doctor.speciality,style: GoogleFonts.manrope(fontWeight: FontWeight.bold,fontSize: 14,color: Colors.blue),),
                       ],
                     ),
                   )

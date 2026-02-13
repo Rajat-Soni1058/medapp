@@ -3,11 +3,14 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:medapp_frontend/doctor/features/home.dart';
+import 'package:medapp_frontend/models/doctor_model.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/my_text_field.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/titles.dart';
 
 class NormalForm extends StatefulWidget {
-  const NormalForm({super.key});
+  final DoctorModel doctor;
+  const NormalForm({super.key, required this.doctor});
 
   @override
   State<NormalForm> createState() => _NormalFormState();
