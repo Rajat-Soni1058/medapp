@@ -53,7 +53,7 @@ class _MainAppState extends ConsumerState<MainApp> {
     return MaterialApp(
       theme: ThemeData.light(),
       debugShowCheckedModeBanner: false,
-      home: PatientForm(doctor: DoctorModel(id: '1', name: 'Dr. Smith', speciality: 'Cardiologist',email: '', phone: '', licenceId: '', availTime: '', fees: 0)),
+      home: PatientHome(),
     // authState.isLoading 
     //       ? Scaffold(
     //           body: Center(
