@@ -10,6 +10,7 @@ import 'package:medapp_frontend/doctor/features/home.dart';
 import 'package:medapp_frontend/doctor/features/history.dart';
 import 'package:medapp_frontend/models/doctor_model.dart';
 import 'package:medapp_frontend/patient/features/chat/chat.dart';
+import 'package:medapp_frontend/doctor/providers/consultationmodel.dart';
 import 'package:medapp_frontend/doctor/providers/doctorprovider.dart';
 import 'package:medapp_frontend/patient/features/home.dart';
 import 'package:medapp_frontend/patient/features/patientForm/patient_form.dart';
@@ -50,10 +51,34 @@ class _MainAppState extends ConsumerState<MainApp> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
+    // Dummy consultation for testing chat screen
+    final dummyConsultation = Consultationmodel(
+      id: 'dummy-123',
+      doctorId: 'doc-456',
+      patientId: 'patient-789',
+      fullName: 'John Doe',
+      age: '35',
+      gender: 'Male',
+      contactNo: '+1234567890',
+      problem: 'Chest pain and shortness of breath during exercise',
+      lifeStyle: 'Regular exercise, non-smoker, occasional alcohol consumption',
+      type: 'emergency',
+      status: 'pending',
+      doctorFileUrl: null,
+      patientFileUrl: null,
+      createdAt: DateTime.now().subtract(Duration(hours: 2)),
+      updatedAt: DateTime.now(),
+      doctor: DoctorInfo(
+        name: 'Dr. Sarah Wilson',
+        speciality: 'Cardiologist',
+      ),
+    );
+
     return MaterialApp(
       theme: ThemeData.light(),
       debugShowCheckedModeBanner: false,
-      home: PatientHome(),
+      home: ChatScreen(consultation: dummyConsultation),
+      // PatientForm(doctor: DoctorModel(id: '1', name: 'Dr. Smith', speciality: 'Cardiologist',email: '', phone: '', licenceId: '', availTime: '', fees: 0)),
     // authState.isLoading 
     //       ? Scaffold(
     //           body: Center(
