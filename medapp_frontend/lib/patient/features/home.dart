@@ -6,6 +6,7 @@ import 'package:medapp_frontend/models/doctor_model.dart';
 import 'package:medapp_frontend/models/soctype-symptom.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/doctorcard.dart';
 import 'package:medapp_frontend/patient/features/bmifeat.dart';
+import 'package:medapp_frontend/patient/features/patientForm/patient_form.dart';
 import 'package:medapp_frontend/patient/providers/patient_provider.dart';
 import 'package:medapp_frontend/patient/providers/patientprovider.dart';
 import 'package:medapp_frontend/providers/auth_provider.dart';
@@ -187,7 +188,7 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
                           children: [
                             InkWell(
                               onTap: (){
-                                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>  BMICalculator()),);
+                                  Navigator.push(context, MaterialPageRoute(builder: (context)=>  BMICalculator()),);
                               },
                               child: Icon(
                                 Icons.email,
@@ -391,10 +392,15 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
                                 itemCount: docs.doctors.length,
                                 itemBuilder: (context, index) {
                                   final doc = docs.doctors[index];
-                                  return doctorcard(
-                                    doctorname: doc.name,
-                                    doctortype: doc.speciality,
-                                    doctorrating: "4.8", 
+                                  return InkWell(
+                                    onTap: (){
+                                      Navigator.push(context, MaterialPageRoute(builder: (context)=>  PatientForm(doctor: doc)),);
+                                    },
+                                    child: doctorcard(
+                                      doctorname: doc.name,
+                                      doctortype: doc.speciality,
+                                      doctorrating: "4.8", 
+                                    ),
                                   );
                                 },
                               ),

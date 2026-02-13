@@ -1,11 +1,13 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:medapp_frontend/models/doctor_model.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/my_text_field.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/titles.dart';
 
 class EmergencyForm extends StatefulWidget {
-  const EmergencyForm({super.key});
+  final DoctorModel  doctor;
+  const EmergencyForm({super.key, required this.doctor});
 
   @override
   State<EmergencyForm> createState() => _EmergencyFormState();
