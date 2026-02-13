@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:medapp_frontend/doctor/features/home.dart';
+import 'package:medapp_frontend/doctor/providers/consultationmodel.dart';
 import 'package:medapp_frontend/models/doctor_model.dart';
+import 'package:medapp_frontend/patient/features/chat/chat.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/my_text_field.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/titles.dart';
+import 'package:medapp_frontend/patient/providers/patientrepo.dart';
 
 class NormalForm extends StatefulWidget {
   final DoctorModel doctor;
@@ -23,6 +25,7 @@ class _NormalFormState extends State<NormalForm> {
   final problemCtrl = TextEditingController();
   final lifeStyleCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
+  bool isLoading = false;
 
   PlatformFile? selectedFile;
 
@@ -281,7 +284,7 @@ class _NormalFormState extends State<NormalForm> {
             SizedBox(height: 30),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              onPressed: () {
+              onPressed: () async {
                 if (nameCtrl.text.trim().isEmpty) {
                   showSnack('Please enter patient name');
                   return;
@@ -312,9 +315,43 @@ class _NormalFormState extends State<NormalForm> {
                   return;
                 }
 
-                // All validations passed
-                showSnack('All fields are valid 👍');
-                // Navigate or submit
+                setState(() => isLoading = true);
+
+                try {
+                  final repo = Patientrepo();
+
+                  final response = await repo.submitForm(
+                    doctorId: widget.doctor.id, // IMPORTANT
+                    fullName: nameCtrl.text.trim(),
+                    age: ageCtrl.text.trim(),
+                    gender: genderCtrl.text.trim(),
+                    contactNo: phoneCtrl.text.trim(),
+                    problem: problemCtrl.text.trim(),
+                    lifeStyle: lifeStyleCtrl.text.trim(),
+                    type: "normal", // CASE TYPE STORED HERE
+                    file: selectedFile != null
+                        ? File(selectedFile!.path!)
+                        : null,
+                  );
+
+                  final consultationJson = response['consultation'] ?? response;
+
+                  final consultationModel = Consultationmodel.fromJson(
+                    consultationJson,
+                  );
+
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ChatScreen(consultation: consultationModel),
+                    ),
+                  );
+                } catch (e) {
+                  showSnack(e.toString().replaceAll("Exception: ", ""));
+                } finally {
+                  setState(() => isLoading = false);
+                }
               },
 
               child: Padding(

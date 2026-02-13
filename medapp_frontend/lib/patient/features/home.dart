@@ -394,6 +394,7 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
                                   final doc = docs.doctors[index];
                                   return InkWell(
                                     onTap: (){
+                                      ref.read(doctorProvider.notifier).selectDoctor(doc);
                                       Navigator.push(context, MaterialPageRoute(builder: (context)=>  PatientForm(doctor: doc)),);
                                     },
                                     child: doctorcard(
