@@ -48,6 +48,20 @@ class DoctorNotifier extends StateNotifier<DoctorState> {
         isLoading: false,
       );
     }
+
+  }
+
+  Future<void> loadAllDoctors() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final doctors = await _repo.getAllDoctors();
+      state = state.copyWith(doctors: doctors, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        error: e.toString().replaceAll('Exception: ', ''),
+        isLoading: false,
+      );
+    }
   }
 
   void selectDoctor(DoctorModel doctor) {
