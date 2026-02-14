@@ -12,6 +12,7 @@ const DoctorSchema = new Schema({
     availTime : { type: String, required: true },
     fees : { type: Number, required: true },
     speciality : {type : String, required : true},
+    fcmToken : { type: String, default: null },
     role : { type : String, default : "doctor"}
 
 },{timestamps:true});

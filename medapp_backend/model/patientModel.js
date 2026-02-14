@@ -19,6 +19,10 @@ const patientschema=new mongoose.Schema({
         type:String,
         required:true,
     },
+    fcmToken: {
+        type: String,
+        default: null
+    },
     role: {
   type: String,
   default: "patient"

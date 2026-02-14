@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart' show StateNotifier, StateNotifierProvider;
 import 'package:medapp_frontend/services/authservice.dart';
 import 'package:medapp_frontend/services/tokenstorage.dart';
+import 'package:medapp_frontend/services/firebase_service.dart';
 
 class AuthState {
   final bool isLoading;
@@ -74,12 +75,18 @@ class AuthController extends StateNotifier<AuthState> {
     );
 
     if (error == null) {
-     
       state = AuthState(
         isAuthenticated: true, 
         role: isDoctor ? 'doctor' : 'patient',
         isLoading: false
       );
+      
+      // Save FCM token to backend after successful login
+      try {
+        await FirebaseService.saveFCMTokentobackend();
+      } catch (e) {
+        print('Error saving FCM token after login: $e');
+      }
     } else {
       state = state.copyWith(isLoading: false, error: error);
     }
@@ -91,14 +98,20 @@ class AuthController extends StateNotifier<AuthState> {
     if (error == null) {
       // Success
       if (!isDoctor) {
-    
         state = AuthState(isAuthenticated: true, role: 'patient', isLoading: false);
+        
+        // Save FCM token to backend after successful patient signup
+        try {
+          await FirebaseService.saveFCMTokentobackend();
+        } catch (e) {
+          print('Error saving FCM token after signup: $e');
+        }
       } else {
-     
         state = state.copyWith(isLoading: false);
       }
       return true;
-    } else {      state = state.copyWith(isLoading: false, error: error);
+    } else {
+      state = state.copyWith(isLoading: false, error: error);
       return false;
     }
   }

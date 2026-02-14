@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class TokenStorage{
@@ -40,6 +41,27 @@ class TokenStorage{
       return await _storage.read(key: _roleKey);
     } catch (e) {
       print('Error reading role: $e');
+      return null;
+    }
+  }
+
+  static Future<String?> getUserId() async {
+    try {
+      final token = await getToken();
+      if (token == null) return null;
+      
+      // Decode JWT to extract user ID
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      
+      final payload = parts[1];
+      final normalized = base64Url.normalize(payload);
+      final decoded = utf8.decode(base64Url.decode(normalized));
+      final Map<String, dynamic> payloadMap = json.decode(decoded);
+      
+      return payloadMap['id'] as String?;
+    } catch (e) {
+      print('Error extracting user ID from token: $e');
       return null;
     }
   }
