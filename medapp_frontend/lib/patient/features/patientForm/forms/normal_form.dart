@@ -283,6 +283,17 @@ class _NormalFormState extends State<NormalForm> {
               ),
             ),
             SizedBox(height: 30),
+
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              onPressed: (){
+
+            }, child: Text('Proceed to payment >',style: GoogleFonts.bungee(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),)),
+            SizedBox(height: 10),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
               onPressed: isLoading
@@ -370,7 +381,7 @@ class _NormalFormState extends State<NormalForm> {
                 child: isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Text(
-                        'Proceed to payment >',
+                        'Submit',
                         style: GoogleFonts.bungee(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
