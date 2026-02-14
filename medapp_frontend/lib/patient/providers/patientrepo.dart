@@ -27,24 +27,23 @@ class Patientrepo {
   }
 
   Future<Consultationmodel> getconsult(String consultId) async {
-  final token = await TokenStorage.getToken();
+    final token = await TokenStorage.getToken();
 
-  final response = await pas.get(
-    '/patient/showform/$consultId',
-    token: token,
-  );
+    final response = await pas.get(
+      '/patient/showform/$consultId',
+      token: token,
+    );
 
-  print("SHOWFORM RESPONSE: $response");
+    print("SHOWFORM RESPONSE: $response");
 
-  final data = response['full'];
+    final data = response['full'];
 
-  if (data == null || data is! Map<String, dynamic>) {
-    throw Exception("Invalid consultation data received from backend");
+    if (data == null || data is! Map<String, dynamic>) {
+      throw Exception("Invalid consultation data received from backend");
+    }
+
+    return Consultationmodel.fromJson(data);
   }
-
-  return Consultationmodel.fromJson(data);
-}
-
 
   Future<List<DoctorModel>> getDoctorsBySpeciality(String speciality) async {
     try {
@@ -133,7 +132,7 @@ class Patientrepo {
       request.fields['Problem'] = problem;
       request.fields['life_style'] = lifeStyle;
       request.fields['type'] = type;
-print("File param received in repo: $file");
+      print("File param received in repo: $file");
       if (file != null && file.bytes != null) {
         request.files.add(
           http.MultipartFile.fromBytes(
@@ -145,13 +144,11 @@ print("File param received in repo: $file");
       }
       print("Total files attached: ${request.files.length}");
 
-
       final streamedResponse = await request.send().timeout(
         const Duration(seconds: 60),
         onTimeout: () => throw Exception('Request timed out'),
       );
       print("Status code: ${streamedResponse.statusCode}");
-
 
       final response = await http.Response.fromStream(streamedResponse);
       print("DEBUG: submitForm raw response body: ${response.body}");
@@ -176,10 +173,7 @@ print("File param received in repo: $file");
         return res;
       }
 
-      return {
-        'msg': 'Unexpected response format from server',
-        'data': decoded,
-      };
+      return {'msg': 'Unexpected response format from server', 'data': decoded};
     } catch (e) {
       throw Exception('Failed to submit form: $e');
     }
@@ -194,6 +188,36 @@ print("File param received in repo: $file");
     return response['maskedNumber'] ?? '';
   }
 
+  //create order
+  Future<Map<String, dynamic>> createOrder(int amount) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/payment"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"fees": amount}),
+    );
 
+    print("STATUS CODE: ${response.statusCode}");
+    print("RAW BODY: ${response.body}");
 
+    return jsonDecode(response.body);
+  }
+
+  //verify payment
+  Future<Map<String, dynamic>> verifyPayment({
+    required String paymentId,
+    required String orderId,
+    required String signature,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/payment/verify"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "rzO_ID": orderId,
+        "rzP_ID": paymentId,
+        "rzSign": signature,
+      }),
+    );
+
+    return jsonDecode(response.body);
+  }
 }

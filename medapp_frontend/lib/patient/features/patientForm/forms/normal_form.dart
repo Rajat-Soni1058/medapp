@@ -9,6 +9,7 @@ import 'package:medapp_frontend/patient/features/chat/chat.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/my_text_field.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/titles.dart';
 import 'package:medapp_frontend/patient/providers/patientrepo.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class NormalForm extends StatefulWidget {
   final DoctorModel doctor;
@@ -26,8 +27,62 @@ class _NormalFormState extends State<NormalForm> {
   final lifeStyleCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
   bool isLoading = false;
+  late Razorpay _razorpay;
+  String? currentOrderId;
+  int? currentAmount;
+
+  bool paymentDone = false;
 
   PlatformFile? selectedFile;
+  @override
+  void initState() {
+    super.initState();
+
+    _razorpay = Razorpay();
+
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+  }
+
+  void showSnack(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    try {
+      final repo = Patientrepo();
+
+      final verifyResponse = await repo.verifyPayment(
+        paymentId: response.paymentId!,
+        orderId: response.orderId!,
+        signature: response.signature!,
+      );
+
+      if (verifyResponse['success'] == true) {
+        setState(() {
+          paymentDone= true;
+        });
+        showSnack("Payment Successful & Verified ✅");
+
+        //  NOW you create consultation or move to chat
+      } else {
+        showSnack("Payment verification failed ❌");
+      }
+    } catch (e) {
+      showSnack("Verification error: $e");
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    showSnack("Payment Failed ❌");
+  }
 
   @override
   void dispose() {
@@ -56,17 +111,6 @@ class _NormalFormState extends State<NormalForm> {
       } else {
         print('cancelled');
       }
-    }
-
-    void showSnack(String message) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
-      );
     }
 
     return Scaffold(
@@ -285,18 +329,75 @@ class _NormalFormState extends State<NormalForm> {
             SizedBox(height: 30),
 
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              onPressed: (){
+              style: ElevatedButton.styleFrom(backgroundColor:paymentDone? Colors.lightGreenAccent: Colors.blue),
+              //changed for razorpay
+              onPressed: 
+              (paymentDone==true)?
+              null:
+              
+              () async {
+                try {
+                  final repo = Patientrepo();
 
-            }, child: Text('Proceed to payment >',style: GoogleFonts.bungee(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: Colors.white,
-                        ),)),
+                  final amount = widget.doctor.fees; // your doctor fee
+
+                  final response = await repo.createOrder(amount);
+
+                  print("ORDER RESPONSE: $response");
+                  if (response != null && response['order'] != null) {
+                    final order = response['order'];
+
+                    currentOrderId = order['id'];
+                    currentAmount = order['amount'];
+                  } else {
+                    showSnack("Order creation failed");
+                    return;
+                  }
+
+                  var options = {
+                    'key': 'rzp_test_SDHaLtPYGWGbGi',
+                    'amount': currentAmount,
+                    'order_id': currentOrderId,
+                    'name': 'MedApp',
+                    'description': 'Doctor Consultation',
+                    'prefill': {'contact': phoneCtrl.text.trim()},
+                  };
+                  print("Opening Razorpay with:");
+                  print("OrderId: $currentOrderId");
+                  print("Amount: $currentAmount");
+
+                  _razorpay.open(options);
+                } catch (e) {
+                  showSnack("Payment error: $e");
+                }
+              },
+
+              child:
+
+              paymentDone?
+              Text(
+                'Payment Done',
+                style: GoogleFonts.bungee(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
+              ):
+               Text(
+                'Proceed to payment >',
+                style: GoogleFonts.bungee(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+
+            //submit button
             SizedBox(height: 10),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              onPressed: isLoading
+              onPressed: ( paymentDone==false || isLoading)
                   ? null
                   : () async {
                       if (nameCtrl.text.trim().isEmpty) {
@@ -349,19 +450,26 @@ class _NormalFormState extends State<NormalForm> {
 
                         String? consultationId;
                         if (response is Map<String, dynamic>) {
-                          dynamic consultData = response['consultation'] ?? response['msg'] ?? response['data'];
+                          dynamic consultData =
+                              response['consultation'] ??
+                              response['msg'] ??
+                              response['data'];
                           if (consultData is Map<String, dynamic>) {
-                            consultationId = (consultData['_id'] ?? consultData['id'])?.toString();
+                            consultationId =
+                                (consultData['_id'] ?? consultData['id'])
+                                    ?.toString();
                           } else if (consultData is String) {
                             consultationId = consultData;
                           }
                         }
 
                         if (consultationId == null || consultationId.isEmpty) {
-                          print("WARN: consultation id not found, using doctor id as fallback");
+                          print(
+                            "WARN: consultation id not found, using doctor id as fallback",
+                          );
                           consultationId = widget.doctor.id;
                         }
-                                                  
+
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
