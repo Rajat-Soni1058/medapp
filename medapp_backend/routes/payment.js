@@ -14,7 +14,7 @@ router.route("/").post(async (req,res)=>{
   return res.status(200).json({sucess:true,order});
 }
 catch(error){
-     res.status(500).json({ error: err.message });
+     res.status(500).json({ error: error.message });
 }
 
 })
