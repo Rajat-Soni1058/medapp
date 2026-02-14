@@ -36,15 +36,25 @@ class FirebaseService {
     final fcmtoken =await getFCMtoken();
       final userToken = await TokenStorage.getToken();
     final role = await TokenStorage.getUserRole();
+    
+    print("=== FCM Token Save Attempt ===");
+    print("FCM Token: ${fcmtoken?.substring(0, 20)}...");
+    print("User Token: ${userToken?.substring(0, 20)}...");
+    print("Role: $role");
+    
     if(fcmtoken!=null && userToken!=null && role!=null  ) {
       try{
         final endpoint =role== 'doctor' ? 'doctor/fcm' : 'patient/fcm';
+        print("Calling endpoint: $endpoint");
         final apiservice = ApiService();
-        await apiservice.post(endpoint, {'fcmToken': fcmtoken}, token: userToken);
+        final response = await apiservice.post(endpoint, {'fcmToken': fcmtoken}, token: userToken);
+        print("FCM Token saved successfully: $response");
       }
       catch(e){
         print("Error saving FCM token to backend: $e");
       }
+    } else {
+      print("Missing required data - fcmToken: ${fcmtoken != null}, userToken: ${userToken != null}, role: $role");
     }
   }
 }
