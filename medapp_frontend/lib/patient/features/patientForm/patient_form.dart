@@ -32,7 +32,6 @@ class _PatientFormState extends ConsumerState<PatientForm> with SingleTickerProv
   }
   @override
   Widget build(BuildContext context) {
-    final selecteddoc = ref.watch(doctorProvider);
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 235, 235, 235),
       body: Stack(

@@ -1,71 +1,55 @@
+import 'package:medapp_frontend/models/doctor_model.dart';
+
 class Consultationmodel {
   final String id;
-  final String doctorId;
-  final String patientId;
   final String fullName;
-  final String age;
-  final String gender;
-  final String contactNo;
-  final String? problem;
-  final String? lifeStyle;
-  final String type;
-  final String status;
-  final String? doctorFileUrl;
-  final String? patientFileUrl;
   final DateTime createdAt;
-  final DateTime updatedAt;
-  final DoctorInfo? doctor;
+  final String status;
+  final String type;
+  final String? patientFileUrl;
+  final String? doctorFileUrl;
+  final DoctorModel? doctor;   // 👈 ADD THIS
 
   Consultationmodel({
     required this.id,
-    required this.doctorId,
-    required this.patientId,
     required this.fullName,
-    required this.age,
-    required this.gender,
-    required this.contactNo,
-    this.problem,
-    this.lifeStyle,
-    required this.type,
-    required this.status,
-    this.doctorFileUrl,
-    this.patientFileUrl,
     required this.createdAt,
-    required this.updatedAt,
+    required this.status,
+    required this.type,
+    this.patientFileUrl,
+    this.doctorFileUrl,
     this.doctor,
   });
 
   factory Consultationmodel.fromJson(Map<String, dynamic> json) {
-    return Consultationmodel(
-      id: json['_id'] ?? '',
-      doctorId: json['doctor_id'] is String
-          ? json['doctor_id']
-          : (json['doctor_id']?['_id'] ?? ''),
-      patientId: json['patient_id'] ?? '',
-      fullName: json['full_name'] ?? '',
-      age: json['age'] ?? '',
-      gender: json['gender'] ?? '',
-      contactNo: json['contactNo'] ?? '',
-      problem: json['Problem'],
-      lifeStyle: json['life_style'],
-      type: json['type'] ?? 'normal',
-      status: json['status'] ?? 'pending',
-      doctorFileUrl: json['doctorFileUrl'],
-      patientFileUrl: json['patientFileUrl'],
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
+    try {
+      DoctorModel? parsedDoctor;
+      if (json['doctor_id'] != null) {
+        final doctorData = json['doctor_id'];
+        if (doctorData is Map<String, dynamic>) {
+          parsedDoctor = DoctorModel.fromJson(doctorData);
+        } else if (doctorData is String) {
+          print("WARNING: doctor_id is a string, not a map: $doctorData");
+        }
+      }
 
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : DateTime.now(),
-
-      doctor: json['doctor_id'] is Map
-          ? DoctorInfo.fromJson(json['doctor_id'])
-          : null,
-    );
+      return Consultationmodel(
+        id: json['_id'] ?? '',
+        fullName: json['full_name'] ?? '',
+        createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+        status: json['status'] ?? 'pending',
+        type: json['type'] ?? 'normal',
+        patientFileUrl: json['patientFileUrl'],
+        doctorFileUrl: json['doctorFileUrl'],
+        doctor: parsedDoctor,
+      );
+    } catch (e) {
+      print("ERROR in Consultationmodel.fromJson: $e");
+      rethrow;
+    }
   }
 }
+
 
 class DoctorInfo {
   final String name;
