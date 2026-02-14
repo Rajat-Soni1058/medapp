@@ -96,21 +96,31 @@ class AuthController extends StateNotifier<AuthState> {
     final error = await _authService.signUp(data: data, isDoctor: isDoctor);
 
     if (error == null) {
-      // Success - save FCM token for both doctor and patient
-      state = AuthState(
-        isAuthenticated: true, 
-        role: isDoctor ? 'doctor' : 'patient',
-        isLoading: false
-      );
-      
-      // Save FCM token to backend after successful signup
-      try {
-        await FirebaseService.saveFCMTokentobackend();
-      } catch (e) {
-        print('Error saving FCM token after signup: $e');
+      // For doctors: signup successful but they need to login (no token returned)
+      // For patients: signup returns token, so set authenticated
+      if (isDoctor) {
+        // Doctor signup successful but no auto-login
+        state = state.copyWith(isLoading: false);
+        // Don't set isAuthenticated or try to save FCM token
+        // Doctor must login separately
+        return true;
+      } else {
+        // Patient signup returns token, so authenticate them
+        state = AuthState(
+          isAuthenticated: true, 
+          role: 'patient',
+          isLoading: false
+        );
+        
+        // Save FCM token to backend after successful patient signup
+        try {
+          await FirebaseService.saveFCMTokentobackend();
+        } catch (e) {
+          print('Error saving FCM token after patient signup: $e');
+        }
+        
+        return true;
       }
-      
-      return true;
     } else {
       state = state.copyWith(isLoading: false, error: error);
       return false;

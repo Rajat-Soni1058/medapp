@@ -33,28 +33,41 @@ class FirebaseService {
     }
   }
   static Future<void> saveFCMTokentobackend() async {
-    final fcmtoken =await getFCMtoken();
+    try {
+      final fcmtoken = await getFCMtoken();
       final userToken = await TokenStorage.getToken();
-    final role = await TokenStorage.getUserRole();
-    
-    print("=== FCM Token Save Attempt ===");
-    print("FCM Token: ${fcmtoken?.substring(0, 20)}...");
-    print("User Token: ${userToken?.substring(0, 20)}...");
-    print("Role: $role");
-    
-    if(fcmtoken!=null && userToken!=null && role!=null  ) {
-      try{
-        final endpoint =role== 'doctor' ? 'doctor/fcm' : 'patient/fcm';
-        print("Calling endpoint: $endpoint");
-        final apiservice = ApiService();
-        final response = await apiservice.post(endpoint, {'fcmToken': fcmtoken}, token: userToken);
-        print("FCM Token saved successfully: $response");
+      final role = await TokenStorage.getUserRole();
+      
+      print("=== FCM Token Save Attempt ===");
+      print("FCM Token: ${fcmtoken != null ? '${fcmtoken.substring(0, 20)}...' : 'NULL'}");
+      print("User Token: ${userToken != null ? '${userToken.substring(0, 20)}...' : 'NULL'}");
+      print("Role: $role");
+      
+      if(fcmtoken == null) {
+        print("❌ ERROR: FCM token is null - Firebase not initialized?");
+        return;
       }
-      catch(e){
-        print("Error saving FCM token to backend: $e");
+      
+      if(userToken == null) {
+        print("❌ ERROR: Auth token is null - User not logged in?");
+        return;
       }
-    } else {
-      print("Missing required data - fcmToken: ${fcmtoken != null}, userToken: ${userToken != null}, role: $role");
+      
+      if(role == null) {
+        print("❌ ERROR: Role is null - Auth data corrupted?");
+        return;
+      }
+      
+      final endpoint = role == 'doctor' ? 'doctor/fcm' : 'patient/fcm';
+      print("✓ All tokens present, calling endpoint: /$endpoint");
+      
+      final apiservice = ApiService();
+      final response = await apiservice.post(endpoint, {'fcmToken': fcmtoken}, token: userToken);
+      print("✅ FCM Token saved successfully: $response");
+      
+    } catch(e) {
+      print("❌ Error saving FCM token to backend: $e");
+      print("Stack trace: ${StackTrace.current}");
     }
   }
 }
