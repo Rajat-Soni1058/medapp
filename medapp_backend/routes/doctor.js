@@ -304,13 +304,16 @@ doctorRouter.get("/emergency/masked/:consultId", doctorMiddleware, async functio
 doctorRouter.post("/fcm", doctorMiddleware, async (req, res) => {
     try {
         const { fcmToken } = req.body;
-        const doctorId = req.doctor.id;
+        const doctorId = req.doctorId;
+
+        console.log('FCM Request - Doctor ID:', doctorId, 'Token:', fcmToken?.substring(0, 20) + '...');
 
         if (!fcmToken) {
             return res.status(400).json({ error: "FCM token is required" });
         }
 
-        await DoctorModel.findByIdAndUpdate(doctorId, { fcmToken });
+        const result = await DoctorModel.findByIdAndUpdate(doctorId, { fcmToken }, { new: true });
+        console.log('FCM token saved for doctor:', doctorId, 'Updated:', !!result);
         return res.json({ msg: "FCM token saved successfully" });
     } catch (error) {
         console.error('Error saving FCM token:', error);
