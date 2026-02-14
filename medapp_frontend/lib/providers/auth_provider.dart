@@ -96,19 +96,20 @@ class AuthController extends StateNotifier<AuthState> {
     final error = await _authService.signUp(data: data, isDoctor: isDoctor);
 
     if (error == null) {
-      // Success
-      if (!isDoctor) {
-        state = AuthState(isAuthenticated: true, role: 'patient', isLoading: false);
-        
-        // Save FCM token to backend after successful patient signup
-        try {
-          await FirebaseService.saveFCMTokentobackend();
-        } catch (e) {
-          print('Error saving FCM token after signup: $e');
-        }
-      } else {
-        state = state.copyWith(isLoading: false);
+      // Success - save FCM token for both doctor and patient
+      state = AuthState(
+        isAuthenticated: true, 
+        role: isDoctor ? 'doctor' : 'patient',
+        isLoading: false
+      );
+      
+      // Save FCM token to backend after successful signup
+      try {
+        await FirebaseService.saveFCMTokentobackend();
+      } catch (e) {
+        print('Error saving FCM token after signup: $e');
       }
+      
       return true;
     } else {
       state = state.copyWith(isLoading: false, error: error);

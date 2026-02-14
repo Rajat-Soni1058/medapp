@@ -10,6 +10,7 @@ import 'package:medapp_frontend/patient/providers/patientprovider.dart';
 import 'package:medapp_frontend/doctor/features/history.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:medapp_frontend/doctor/features/incomingcall.dart';
+import 'package:medapp_frontend/services/firebase_service.dart';
 
 class DoctorHome extends ConsumerStatefulWidget{
     @override
@@ -19,9 +20,21 @@ class DoctorHome extends ConsumerStatefulWidget{
 class _DoctorHomeState extends ConsumerState<DoctorHome> {
     bool isem = true;
 
+    Future<void> _saveFCMToken() async {
+      try {
+        await FirebaseService.saveFCMTokentobackend();
+        print('Doctor FCM token saved successfully');
+      } catch (e) {
+        print('Error saving doctor FCM token: $e');
+      }
+    }
+
     @override
     void initState() {
       super.initState();
+      
+      // Save FCM token to backend on home screen load
+      _saveFCMToken();
       
       // Listen for incoming video calls when app is in foreground
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
