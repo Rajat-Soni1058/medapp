@@ -167,6 +167,18 @@ router.route("/emergency/masked/:consultId")
         });
     });
 
+// route to get doctors by speciality -------->
+router.route("/:speciality").get(checkValidPatient, async (req, res) => {
+    try {
+        const speciality = req.params.speciality;
+        const docs = await DoctorModel.find({ speciality });
+        return res.json({ Doclist: docs });
+    } catch (e) {
+        console.error('Error fetching doctors by speciality:', e);
+        return res.status(500).json({ error: 'Server error' });
+    }
+});
+
 
 
 
