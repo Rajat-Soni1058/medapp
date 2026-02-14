@@ -46,6 +46,7 @@ class _NormalFormState extends State<NormalForm> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'jpg', 'png', 'jpeg'],
+        withData: true,
       );
 
       if (result != null) {
@@ -284,86 +285,98 @@ class _NormalFormState extends State<NormalForm> {
             SizedBox(height: 30),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              onPressed: () async {
-                if (nameCtrl.text.trim().isEmpty) {
-                  showSnack('Please enter patient name');
-                  return;
-                }
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (nameCtrl.text.trim().isEmpty) {
+                        showSnack('Please enter patient name');
+                        return;
+                      }
 
-                if (ageCtrl.text.trim().isEmpty) {
-                  showSnack('Please enter patient age');
-                  return;
-                }
+                      if (ageCtrl.text.trim().isEmpty) {
+                        showSnack('Please enter patient age');
+                        return;
+                      }
 
-                if (genderCtrl.text.trim().isEmpty) {
-                  showSnack('Please enter patient gender');
-                  return;
-                }
+                      if (genderCtrl.text.trim().isEmpty) {
+                        showSnack('Please enter patient gender');
+                        return;
+                      }
 
-                if (phoneCtrl.text.trim().isEmpty) {
-                  showSnack('Please enter contact number');
-                  return;
-                }
+                      if (phoneCtrl.text.trim().isEmpty) {
+                        showSnack('Please enter contact number');
+                        return;
+                      }
 
-                if (problemCtrl.text.trim().isEmpty) {
-                  showSnack('Please describe the problem');
-                  return;
-                }
+                      if (problemCtrl.text.trim().isEmpty) {
+                        showSnack('Please describe the problem');
+                        return;
+                      }
 
-                if (lifeStyleCtrl.text.trim().isEmpty) {
-                  showSnack('Please enter lifestyle details');
-                  return;
-                }
+                      if (lifeStyleCtrl.text.trim().isEmpty) {
+                        showSnack('Please enter lifestyle details');
+                        return;
+                      }
 
-                setState(() => isLoading = true);
+                      setState(() => isLoading = true);
 
-                try {
-                  final repo = Patientrepo();
+                      try {
+                        final repo = Patientrepo();
 
-                  final response = await repo.submitForm(
-                    doctorId: widget.doctor.id, // IMPORTANT
-                    fullName: nameCtrl.text.trim(),
-                    age: ageCtrl.text.trim(),
-                    gender: genderCtrl.text.trim(),
-                    contactNo: phoneCtrl.text.trim(),
-                    problem: problemCtrl.text.trim(),
-                    lifeStyle: lifeStyleCtrl.text.trim(),
-                    type: "normal", // CASE TYPE STORED HERE
-                    file: selectedFile != null
-                        ? File(selectedFile!.path!)
-                        : null,
-                  );
+                        final response = await repo.submitForm(
+                          doctorId: widget.doctor.id,
+                          fullName: nameCtrl.text.trim(),
+                          age: ageCtrl.text.trim(),
+                          gender: genderCtrl.text.trim(),
+                          contactNo: phoneCtrl.text.trim(),
+                          problem: problemCtrl.text.trim(),
+                          lifeStyle: lifeStyleCtrl.text.trim(),
+                          type: "normal",
+                          file: selectedFile,
+                        );
+                        print("FULL BACKEND RESPONSE: $response");
 
-                  final consultationJson = response['consultation'] ?? response;
+                        String? consultationId;
+                        if (response is Map<String, dynamic>) {
+                          dynamic consultData = response['consultation'] ?? response['msg'] ?? response['data'];
+                          if (consultData is Map<String, dynamic>) {
+                            consultationId = (consultData['_id'] ?? consultData['id'])?.toString();
+                          } else if (consultData is String) {
+                            consultationId = consultData;
+                          }
+                        }
 
-                  final consultationModel = Consultationmodel.fromJson(
-                    consultationJson,
-                  );
-
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          ChatScreen(consultation: consultationModel),
-                    ),
-                  );
-                } catch (e) {
-                  showSnack(e.toString().replaceAll("Exception: ", ""));
-                } finally {
-                  setState(() => isLoading = false);
-                }
-              },
+                        if (consultationId == null || consultationId.isEmpty) {
+                          print("WARN: consultation id not found, using doctor id as fallback");
+                          consultationId = widget.doctor.id;
+                        }
+                                                  
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ChatScreen(consultationId: consultationId!),
+                          ),
+                        );
+                      } catch (e) {
+                        showSnack(e.toString().replaceAll("Exception: ", ""));
+                      } finally {
+                        setState(() => isLoading = false);
+                      }
+                    },
 
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: Text(
-                  'Proceed to payment >',
-                  style: GoogleFonts.bungee(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.white,
-                  ),
-                ),
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        'Proceed to payment >',
+                        style: GoogleFonts.bungee(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 10),

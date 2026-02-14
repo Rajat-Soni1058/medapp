@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import '../../services/apiservice.dart';
@@ -14,22 +15,46 @@ class Patientrepo {
   Future<List<Consultationmodel>> getunresolved() async {
     final token = await TokenStorage.getToken();
     final response = await pas.get('/patient/unresolved', token: token);
-    final list = response['unResolveDocs'] as List;
+    final list = response['unResolveDocs'] ?? [];
     return list.map((e) => Consultationmodel.fromJson(e)).toList();
   }
 
   Future<List<Consultationmodel>> getresolved() async {
     final token = await TokenStorage.getToken();
     final response = await pas.get('/patient/resolved', token: token);
-    final list = response['ResolveDocs'] as List;
+    final list = response['ResolveDocs'] ?? [];
     return list.map((e) => Consultationmodel.fromJson(e)).toList();
   }
 
   Future<Consultationmodel> getconsult(String consultId) async {
-    final token = await TokenStorage.getToken();
-    final response = await pas.get('/patient/showform/$consultId', token: token);
-    return Consultationmodel.fromJson(response['full']);
+  final token = await TokenStorage.getToken();
+
+  try {
+    final response = await pas.get(
+      '/patient/showform/$consultId',
+      token: token,
+    );
+
+    print("SHOWFORM RESPONSE: $response");
+
+    final data = response['full'];
+
+    if (data == null) {
+      throw Exception("Consultation data is null");
+    }
+
+    if (data is! Map<String, dynamic>) {
+      print("ERROR: data is not a Map, it is: ${data.runtimeType}");
+      throw Exception("Invalid consultation data received: expected Map but got ${data.runtimeType}");
+    }
+
+    return Consultationmodel.fromJson(data);
+  } catch (e) {
+    print("ERROR in getconsult: $e");
+    rethrow;
   }
+}
+
 
   Future<List<DoctorModel>> getDoctorsBySpeciality(String speciality) async {
     try {
@@ -41,7 +66,8 @@ class Patientrepo {
       final list = response['Doclist'] as List;
       return list.map((e) => DoctorModel.fromJson(e)).toList();
     } catch (e) {
-      if (e.toString().contains('401') || e.toString().toLowerCase().contains('unauthorized')) {
+      if (e.toString().contains('401') ||
+          e.toString().toLowerCase().contains('unauthorized')) {
         throw Exception('401: Session expired or invalid token');
       }
       rethrow;
@@ -54,11 +80,17 @@ class Patientrepo {
       if (token == null || token.isEmpty) {
         throw Exception('401: No authentication token found');
       }
-      
+
       // Fetch doctors from all specialities
-      final specialities = ['Cardiologist', 'Dermatologist', 'General Physician', 'Neurologist', 'Orthopedist'];
+      final specialities = [
+        'Cardiologist',
+        'Dermatologist',
+        'General Physician',
+        'Neurologist',
+        'Orthopedist',
+      ];
       final allDoctors = <DoctorModel>[];
-      
+
       for (final speciality in specialities) {
         try {
           final response = await pas.get('/patient/$speciality', token: token);
@@ -69,10 +101,11 @@ class Patientrepo {
           continue;
         }
       }
-      
+
       return allDoctors;
     } catch (e) {
-      if (e.toString().contains('401') || e.toString().toLowerCase().contains('unauthorized')) {
+      if (e.toString().contains('401') ||
+          e.toString().toLowerCase().contains('unauthorized')) {
         throw Exception('401: Session expired or invalid token');
       }
       rethrow;
@@ -88,10 +121,11 @@ class Patientrepo {
     required String problem,
     required String lifeStyle,
     required String type,
-    File? file,
+    PlatformFile? file, // 🔥 CHANGE HERE
   }) async {
     try {
       final token = await TokenStorage.getToken();
+      print("DEBUG: patientrepo.submitForm token= $token");
 
       var request = http.MultipartRequest(
         'POST',
@@ -109,34 +143,53 @@ class Patientrepo {
       request.fields['Problem'] = problem;
       request.fields['life_style'] = lifeStyle;
       request.fields['type'] = type;
-
-      if (file != null) {
+print("File param received in repo: $file");
+      if (file != null && file.bytes != null) {
         request.files.add(
-          await http.MultipartFile.fromPath(
+          http.MultipartFile.fromBytes(
             'patientForm',
-            file.path,
-            filename: path.basename(file.path),
+            file.bytes!,
+            filename: file.name,
           ),
         );
       }
+      print("Total files attached: ${request.files.length}");
+
 
       final streamedResponse = await request.send().timeout(
         const Duration(seconds: 60),
         onTimeout: () => throw Exception('Request timed out'),
       );
+      print("Status code: ${streamedResponse.statusCode}");
+
 
       final response = await http.Response.fromStream(streamedResponse);
+      print("DEBUG: submitForm raw response body: ${response.body}");
 
       if (response.statusCode >= 400) {
         try {
           final e = jsonDecode(response.body) as Map<String, dynamic>;
-          throw Exception(e['msg'] ?? e['message'] ?? e['error'] ?? 'Unknown error');
+          throw Exception(
+            e['msg'] ?? e['message'] ?? e['error'] ?? 'Unknown error',
+          );
         } catch (_) {
           throw Exception('${response.statusCode} ${response.body}');
         }
       }
 
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) {
+        final res = Map<String, dynamic>.from(decoded);
+        if (res['msg'] == null && res.containsKey('consultation')) {
+          res['msg'] = res['consultation'];
+        }
+        return res;
+      }
+
+      return {
+        'msg': 'Unexpected response format from server',
+        'data': decoded,
+      };
     } catch (e) {
       throw Exception('Failed to submit form: $e');
     }
@@ -144,7 +197,13 @@ class Patientrepo {
 
   Future<String> getEmergencyMaskedNumber(String consultId) async {
     final token = await TokenStorage.getToken();
-    final response = await pas.get('/patient/emergency/masked/$consultId', token: token);
+    final response = await pas.get(
+      '/patient/emergency/masked/$consultId',
+      token: token,
+    );
     return response['maskedNumber'] ?? '';
   }
+
+
+
 }
