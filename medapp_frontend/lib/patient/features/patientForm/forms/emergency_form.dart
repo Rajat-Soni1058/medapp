@@ -295,6 +295,7 @@ class _EmergencyFormState extends State<EmergencyForm> {
 
                   print("FULL BACKEND RESPONSE: $response");
 
+
                   String? consultationId;
                   if (response is Map<String, dynamic>) {
                     dynamic consultData = response['consultation'] ?? response['msg'] ?? response['data'];

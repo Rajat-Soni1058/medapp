@@ -29,30 +29,20 @@ class Patientrepo {
   Future<Consultationmodel> getconsult(String consultId) async {
   final token = await TokenStorage.getToken();
 
-  try {
-    final response = await pas.get(
-      '/patient/showform/$consultId',
-      token: token,
-    );
+  final response = await pas.get(
+    '/patient/showform/$consultId',
+    token: token,
+  );
 
-    print("SHOWFORM RESPONSE: $response");
+  print("SHOWFORM RESPONSE: $response");
 
-    final data = response['full'];
+  final data = response['full'];
 
-    if (data == null) {
-      throw Exception("Consultation data is null");
-    }
-
-    if (data is! Map<String, dynamic>) {
-      print("ERROR: data is not a Map, it is: ${data.runtimeType}");
-      throw Exception("Invalid consultation data received: expected Map but got ${data.runtimeType}");
-    }
-
-    return Consultationmodel.fromJson(data);
-  } catch (e) {
-    print("ERROR in getconsult: $e");
-    rethrow;
+  if (data == null || data is! Map<String, dynamic>) {
+    throw Exception("Invalid consultation data received from backend");
   }
+
+  return Consultationmodel.fromJson(data);
 }
 
 
