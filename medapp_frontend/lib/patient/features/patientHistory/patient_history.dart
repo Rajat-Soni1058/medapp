@@ -18,44 +18,45 @@ class _PatientHistoryState extends ConsumerState<PatientHistory>
   late TabController _tabController;
 
   Widget buildlist(AsyncValue<List<Consultationmodel>> asyncCases) {
-  return asyncCases.when(
-    data: (cases) {
-      if (cases.isEmpty) {
-        return const Center(child: Text('No History Found'));
-      }
-      return RefreshIndicator(
-        onRefresh: ()async{
-          ref.refresh(patientCompletedProvider);
-          ref.refresh(patientPendingProvider);
-        },
-        child: ListView.builder(
-          padding: const EdgeInsets.only(top: 16),
-          itemCount: cases.length,
-          itemBuilder: (context, index) {
-            final consultation = cases[index];
-            return PVHCard(
-              statusType: consultation.status == 'responded'
-                  ? "completed"
-                  : "cancelled",
-              datetime: consultation.createdAt,
-              name: consultation.fullName,
-              navigateTo: ChatScreen(consultation: consultation),
-            );
+    return asyncCases.when(
+      data: (cases) {
+        if (cases.isEmpty) {
+          return const Center(child: Text('No History Found'));
+        }
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.refresh(patientCompletedProvider);
+            ref.refresh(patientPendingProvider);
           },
-        ),
-      );
-    },
-    error: (e, _) {
-      return Center(child: Text("Error: $e"));
-    },
-    loading: () {
-      return SizedBox(
-        height: 40,
-        width: 40,
-        child: CircularProgressIndicator());
-    },
-  );
-}
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 16),
+            itemCount: cases.length,
+            itemBuilder: (context, index) {
+              final consultation = cases[index];
+              return PVHCard(
+                statusType: consultation.status == 'responded'
+                    ? "completed"
+                    : "cancelled",
+                datetime: consultation.createdAt,
+                name: consultation.fullName,
+                navigateTo: ChatScreen(consultationId: consultation.id),
+              );
+            },
+          ),
+        );
+      },
+      error: (e, _) {
+        return Center(child: Text("Error: $e"));
+      },
+      loading: () {
+        return SizedBox(
+          height: 40,
+          width: 40,
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -217,5 +218,3 @@ class _PatientHistoryState extends ConsumerState<PatientHistory>
     );
   }
 }
-
-
