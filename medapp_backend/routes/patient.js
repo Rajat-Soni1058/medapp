@@ -221,8 +221,11 @@ router.post("/call/initiate", checkValidPatient, async (req, res) => {
         const doctor = consultation.doctor_id;
         const patient = consultation.patient_id;
 
+        console.log('Call initiation - Doctor:', doctor.name, 'FCM Token:', doctor.fcmToken ? 'Present' : 'MISSING');
+
         // Check if doctor has FCM token
         if (!doctor.fcmToken) {
+            console.log('ERROR: Doctor', doctor.name, '(ID:', doctorId, ') has no FCM token in database');
             return res.status(400).json({ error: "Doctor's device not registered for notifications" });
         }
 
