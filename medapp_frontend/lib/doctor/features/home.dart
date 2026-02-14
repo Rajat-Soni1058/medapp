@@ -8,6 +8,8 @@ import 'package:medapp_frontend/doctor/components/doctors_patient_hsitory_card.d
 import 'package:medapp_frontend/doctor/providers/doctorprovider.dart';
 import 'package:medapp_frontend/patient/providers/patientprovider.dart';
 import 'package:medapp_frontend/doctor/features/history.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:medapp_frontend/doctor/features/incomingcall.dart';
 
 class DoctorHome extends ConsumerStatefulWidget{
     @override
@@ -16,6 +18,39 @@ class DoctorHome extends ConsumerStatefulWidget{
 
 class _DoctorHomeState extends ConsumerState<DoctorHome> {
     bool isem = true;
+
+    @override
+    void initState() {
+      super.initState();
+      
+      // Listen for incoming video calls when app is in foreground
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        print('Doctor app received message: ${message.notification?.title}');
+        
+        if (message.data['type'] == 'video_call') {
+          final callId = message.data['callId'] ?? message.data['consultationId'];
+          final patientName = message.data['patientName'] ?? 'Patient';
+          
+          if (mounted) {
+            IncomingCallDialog.show(context, callId, patientName);
+          }
+        }
+      });
+      
+      // Handle notification tap when app was in background
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        print('Notification opened in doctor app: ${message.data}');
+        
+        if (message.data['type'] == 'video_call') {
+          final callId = message.data['callId'] ?? message.data['consultationId'];
+          final patientName = message.data['patientName'] ?? 'Patient';
+          
+          if (mounted) {
+            IncomingCallDialog.show(context, callId, patientName);
+          }
+        }
+      });
+    }
 
     @override
     Widget build(BuildContext context) {

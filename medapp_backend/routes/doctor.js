@@ -300,6 +300,24 @@ doctorRouter.get("/emergency/masked/:consultId", doctorMiddleware, async functio
     });
 });
 
+// Save FCM token for doctor
+doctorRouter.post("/fcm", doctorMiddleware, async (req, res) => {
+    try {
+        const { fcmToken } = req.body;
+        const doctorId = req.doctor.id;
+
+        if (!fcmToken) {
+            return res.status(400).json({ error: "FCM token is required" });
+        }
+
+        await DoctorModel.findByIdAndUpdate(doctorId, { fcmToken });
+        return res.json({ msg: "FCM token saved successfully" });
+    } catch (error) {
+        console.error('Error saving FCM token:', error);
+        return res.status(500).json({ error: "Failed to save FCM token" });
+    }
+});
+
 module.exports = {
     doctorRouter: doctorRouter
 }
