@@ -7,7 +7,7 @@ const {razorpay }= require("../configuration/razorpay.js");
 router.route("/").post(async (req,res)=>{
    try {
     const {fees}=req.body;
-   const order= await razorpay.order.create({
+   const order= await razorpay.orders.create({
     amount:fees*100,
     currency: "INR",
    })
