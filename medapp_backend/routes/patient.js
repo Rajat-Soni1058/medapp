@@ -166,7 +166,7 @@ router.route("/emergency/masked/:consultId")
             msg: "Use this number to call the doctor"
         });
     });
-    
+
 // route to get doctors by speciality -------->
 router.route("/:speciality").get(checkValidPatient, async (req, res) => {
     try {
@@ -178,6 +178,7 @@ router.route("/:speciality").get(checkValidPatient, async (req, res) => {
         return res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 
 
