@@ -308,13 +308,33 @@ doctorRouter.post("/fcm", doctorMiddleware, async (req, res) => {
         const doctorId = req.doctorId;
 
         console.log('FCM Request - Doctor ID:', doctorId, 'Token:', fcmToken?.substring(0, 20) + '...');
+        console.log('FCM Debug - headers:', Object.keys(req.headers).reduce((acc, k) => { acc[k]=req.headers[k]; return acc }, {}));
+        console.log('FCM Debug - body:', req.body);
+
+        // Log existing doctor document before update
+        let doctorBefore = null;
+        try {
+            doctorBefore = await DoctorModel.findById(doctorId).lean();
+            console.log('FCM Debug - doctor before update:', doctorBefore ? { _id: doctorBefore._id, fcmToken: doctorBefore.fcmToken } : null);
+        } catch (dbgErr) {
+            console.error('FCM Debug - error fetching doctor before update:', dbgErr);
+        }
 
         if (!fcmToken) {
             return res.status(400).json({ error: "FCM token is required" });
         }
+        
 
-        const result = await DoctorModel.findByIdAndUpdate(doctorId, { fcmToken }, { new: true });
+        const result = await DoctorModel.findByIdAndUpdate(doctorId, { $set: { fcmToken } }, { new: true });
         console.log('FCM token saved for doctor:', doctorId, 'Updated:', !!result);
+
+        // Log doctor after update
+        try {
+            const doctorAfter = await DoctorModel.findById(doctorId).lean();
+            console.log('FCM Debug - doctor after update:', doctorAfter ? { _id: doctorAfter._id, fcmToken: doctorAfter.fcmToken } : null);
+        } catch (dbgErr) {
+            console.error('FCM Debug - error fetching doctor after update:', dbgErr);
+        }
         
         if (!result) {
             console.log('ERROR: Doctor not found in database with ID:', doctorId);
