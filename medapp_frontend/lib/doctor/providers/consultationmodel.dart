@@ -8,7 +8,8 @@ class Consultationmodel {
   final String type;
   final String? patientFileUrl;
   final String? doctorFileUrl;
-  final DoctorModel? doctor;   // 👈 ADD THIS
+  final String doctorId;
+  final DoctorModel? doctor;
 
   Consultationmodel({
     required this.id,
@@ -18,6 +19,7 @@ class Consultationmodel {
     required this.type,
     this.patientFileUrl,
     this.doctorFileUrl,
+    required this.doctorId,
     this.doctor,
   });
 
@@ -41,6 +43,7 @@ class Consultationmodel {
         type: json['type'] ?? 'normal',
         patientFileUrl: json['patientFileUrl'],
         doctorFileUrl: json['doctorFileUrl'],
+        doctorId: json['doctor_id'] is String ? json['doctor_id'] : (json['doctor_id']?['_id'] ?? ''),
         doctor: parsedDoctor,
       );
     } catch (e) {

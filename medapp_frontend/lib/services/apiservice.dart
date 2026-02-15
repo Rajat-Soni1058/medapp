@@ -5,8 +5,11 @@ class ApiService {
   static const Duration timeout = Duration(seconds: 60);
   Future<Map<String,dynamic>> post (String endpoint, Map<String,dynamic> body, {String ?token} ) async {
     try {
+      final path = endpoint.startsWith('/') ? endpoint : '/$endpoint';
+      final url = '$baseUrl$path';
+      print('ApiService POST -> $url');
       final response = await http.post(
-        Uri.parse('$baseUrl$endpoint'),
+        Uri.parse(url),
         headers: {
           "Content-Type": "application/json",
           if(token!=null) "Authorization": "Bearer $token",
@@ -32,8 +35,11 @@ class ApiService {
   }
   Future<Map<String,dynamic>> get(String endpoint, {String ?token}) async {
   try {
+    final path = endpoint.startsWith('/') ? endpoint : '/$endpoint';
+    final url = '$baseUrl$path';
+    print('ApiService GET -> $url');
     final response = await http.get(
-      Uri.parse('$baseUrl$endpoint'),
+      Uri.parse(url),
       headers: {
         "Content-Type": "application/json",
         if(token!=null) "Authorization": "Bearer $token",

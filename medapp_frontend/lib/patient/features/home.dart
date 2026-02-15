@@ -17,6 +17,7 @@ import 'package:medapp_frontend/auth/common_start.dart';
 import 'package:medapp_frontend/theme/colors.dart';
 //import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medapp_frontend/services/firebase_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class PatientHome extends ConsumerStatefulWidget {
@@ -85,10 +86,23 @@ class _PatientHomeState extends ConsumerState<PatientHome> {
   void initState() {
     super.initState();
     filteredSymptoms = symptoms;
+    
+    // Save FCM token to backend on home screen load
+    _saveFCMToken();
+    
     // Load all doctors by default
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(doctorProvider.notifier).loadAllDoctors();
     });
+  }
+  
+  Future<void> _saveFCMToken() async {
+    try {
+      await FirebaseService.saveFCMTokentobackend();
+      print('Patient FCM token saved successfully');
+    } catch (e) {
+      print('Error saving patient FCM token: $e');
+    }
   }
 
   void _filterDoctors() async {

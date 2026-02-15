@@ -188,7 +188,30 @@ class Patientrepo {
     return response['maskedNumber'] ?? '';
   }
 
-  //create order
+  Future<Map<String, dynamic>> initiateCall({
+    required String consultationId,
+    required String doctorId,
+  }) async {
+    try {
+      final token = await TokenStorage.getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('No authentication token found');
+      }
+
+      final response = await pas.post(
+        '/patient/call/initiate',
+        {
+          'consultationId': consultationId,
+          'doctorId': doctorId,
+        },
+        token: token,
+      );
+
+      return response;
+    } catch (e) {
+      throw Exception('Failed to initiate call: $e');
+    }
+  }  //create order
   Future<Map<String, dynamic>> createOrder(int amount) async {
     final response = await http.post(
       Uri.parse("$baseUrl/payment"),

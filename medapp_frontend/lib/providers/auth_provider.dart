@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart' show StateNotifier, StateNotifierProvider;
 import 'package:medapp_frontend/services/authservice.dart';
 import 'package:medapp_frontend/services/tokenstorage.dart';
+import 'package:medapp_frontend/services/firebase_service.dart';
 
 class AuthState {
   final bool isLoading;
@@ -74,12 +75,18 @@ class AuthController extends StateNotifier<AuthState> {
     );
 
     if (error == null) {
-     
       state = AuthState(
         isAuthenticated: true, 
         role: isDoctor ? 'doctor' : 'patient',
         isLoading: false
       );
+      
+      // Save FCM token to backend after successful login
+      try {
+        await FirebaseService.saveFCMTokentobackend();
+      } catch (e) {
+        print('Error saving FCM token after login: $e');
+      }
     } else {
       state = state.copyWith(isLoading: false, error: error);
     }
@@ -89,16 +96,33 @@ class AuthController extends StateNotifier<AuthState> {
     final error = await _authService.signUp(data: data, isDoctor: isDoctor);
 
     if (error == null) {
-      // Success
-      if (!isDoctor) {
-    
-        state = AuthState(isAuthenticated: true, role: 'patient', isLoading: false);
-      } else {
-     
+      // For doctors: signup successful but they need to login (no token returned)
+      // For patients: signup returns token, so set authenticated
+      if (isDoctor) {
+        // Doctor signup successful but no auto-login
         state = state.copyWith(isLoading: false);
+        // Don't set isAuthenticated or try to save FCM token
+        // Doctor must login separately
+        return true;
+      } else {
+        // Patient signup returns token, so authenticate them
+        state = AuthState(
+          isAuthenticated: true, 
+          role: 'patient',
+          isLoading: false
+        );
+        
+        // Save FCM token to backend after successful patient signup
+        try {
+          await FirebaseService.saveFCMTokentobackend();
+        } catch (e) {
+          print('Error saving FCM token after patient signup: $e');
+        }
+        
+        return true;
       }
-      return true;
-    } else {      state = state.copyWith(isLoading: false, error: error);
+    } else {
+      state = state.copyWith(isLoading: false, error: error);
       return false;
     }
   }

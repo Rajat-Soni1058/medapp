@@ -10,8 +10,9 @@ router.route("/").post(async (req,res)=>{
    const order= await razorpay.orders.create({
     amount:fees*100,
     currency: "INR",
+    receipt: "receipt_" + Date.now(),
    })
-  return res.status(200).json({sucess:true,order});
+  return res.status(200).json({success:true,order});
 }
 catch(error){
      res.status(500).json({ error: error.message });

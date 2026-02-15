@@ -7,6 +7,7 @@ class DoctorModel {
   final String availTime;
   final int fees;
   final String speciality;
+  final String? fcmToken;
 
   DoctorModel({
     required this.id,
@@ -17,6 +18,7 @@ class DoctorModel {
     required this.availTime,
     required this.fees,
     required this.speciality,
+    this.fcmToken,
   });
 
   factory DoctorModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class DoctorModel {
       availTime: json['availTime'] ?? '',
       fees: json['fees'] ?? 0,
       speciality: json['speciality'] ?? '',
+      fcmToken: json['fcmToken'],
     );
   }
 }

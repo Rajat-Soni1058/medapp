@@ -8,6 +8,8 @@ import 'package:medapp_frontend/services/tokenstorage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:medapp_frontend/doctor/providers/consultationmodel.dart';
 import 'package:medapp_frontend/patient/providers/patientrepo.dart';
+import 'package:medapp_frontend/patient/features/video_call_screen.dart';
+import 'package:medapp_frontend/services/tokenstorage.dart';
 
 final consultationByIdProvider =
     FutureProvider.family<Consultationmodel, String>((ref, id) async {
@@ -52,7 +54,54 @@ class ChatScreen extends ConsumerWidget {
                 ? null
                 : [
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        try {
+                         
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+
+                          final repo = Patientrepo();
+                          await repo.initiateCall(
+                            consultationId: consultation.id,
+                            doctorId: consultation.doctorId,
+                          );
+                          final userId = await TokenStorage.getUserId() ?? 'patient';
+                          final userName = consultation.fullName;
+
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                          if (context.mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VideoCallScreen(
+                                  callId: consultation.id,
+                                  userId: userId,
+                                  userName: userName,
+                                ),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to initiate call: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
                       icon: const Icon(Icons.video_call),
                     ),
                     IconButton(

@@ -179,9 +179,82 @@ router.route("/:speciality").get(checkValidPatient, async (req, res) => {
     }
 });
 
+// Save FCM token for patient
+router.post("/fcm", checkValidPatient, async (req, res) => {
+    try {
+        const { fcmToken } = req.body;
+        const patientId = req.patient.id;
 
+        if (!fcmToken) {
+            return res.status(400).json({ error: "FCM token is required" });
+        }
 
+        await Patient.findByIdAndUpdate(patientId, { fcmToken });
+        return res.json({ msg: "FCM token saved successfully" });
+    } catch (error) {
+        console.error('Error saving FCM token:', error);
+        return res.status(500).json({ error: "Failed to save FCM token" });
+    }
+});
 
+// Initiate video call - sends push notification to doctor
+router.post("/call/initiate", checkValidPatient, async (req, res) => {
+    try {
+        const { consultationId, doctorId } = req.body;
+        const patientId = req.patient.id;
 
+        if (!consultationId || !doctorId) {
+            return res.status(400).json({ error: "consultationId and doctorId are required" });
+        }
+
+        // Verify consultation exists and belongs to patient
+        const consultation = await Consultation.findOne({
+            _id: consultationId,
+            patient_id: patientId,
+            doctor_id: doctorId
+        }).populate('patient_id', 'name').populate('doctor_id', 'name fcmToken');
+
+        if (!consultation) {
+            return res.status(404).json({ error: "Consultation not found" });
+        }
+
+        const doctor = consultation.doctor_id;
+        const patient = consultation.patient_id;
+
+        console.log('Call initiation - Doctor:', doctor.name, 'FCM Token:', doctor.fcmToken ? 'Present' : 'MISSING');
+
+        // Check if doctor has FCM token
+        if (!doctor.fcmToken) {
+            console.log('ERROR: Doctor', doctor.name, '(ID:', doctorId, ') has no FCM token in database');
+            return res.status(400).json({ error: "Doctor's device not registered for notifications" });
+        }
+
+        // Send push notification to doctor using Firebase Admin
+        const admin = require('../configuration/firebase');
+        const message = {
+            notification: {
+                title: 'Incoming Video Call',
+                body: `${patient.name} is calling you`
+            },
+            data: {
+                type: 'video_call',
+                consultationId: consultationId,
+                patientId: patientId,
+                patientName: patient.name,
+                callId: consultationId // Using consultationId as unique call ID
+            },
+            token: doctor.fcmToken
+        };
+
+        await admin.messaging().send(message);
+        return res.json({ 
+            msg: "Call initiated successfully",
+            callId: consultationId
+        });
+    } catch (error) {
+        console.error('Error initiating call:', error);
+        return res.status(500).json({ error: "Failed to initiate call" });
+    }
+});
 
 module.exports = router;
