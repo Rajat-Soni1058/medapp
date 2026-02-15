@@ -8,17 +8,35 @@ class DocRepo{
   Future<List<Consultationmodel>> getnormal() async{
     final token = await TokenStorage.getToken();
     final response = await das.get('/doctor/cases/normal' , token: token);
-    return (response as List).map((e) => Consultationmodel.fromJson(e)).toList();
+    print('NORMAL RESPONSE: $response');
+    
+    // The backend returns a List directly, not wrapped in a Map
+    if (response is List) {
+      return response.cast<Map<String, dynamic>>().map((e) => Consultationmodel.fromJson(e)).toList();
+    }
+    return [];
   }
   Future<List<Consultationmodel>> getemergency() async {
     final token = await TokenStorage.getToken();
-    final response= await das.get('/doctor/cases/emergency', token: token) ;
-    return (response as List).map((e)=>Consultationmodel.fromJson(e)).toList();
+    final response = await das.get('/doctor/cases/emergency', token: token);
+    print('EMERGENCY RESPONSE: $response');
+    
+    // The backend returns a List directly, not wrapped in a Map
+    if (response is List) {
+      return response.cast<Map<String, dynamic>>().map((e) => Consultationmodel.fromJson(e)).toList();
+    }
+    return [];
   }
-  Future<List<Consultationmodel>> gethistory()async {
+  Future<List<Consultationmodel>> gethistory() async {
     final token = await TokenStorage.getToken();
-    final response  = await das.get('/doctor/history', token: token);
-    return (response as List).map((e)=>Consultationmodel.fromJson(e)).toList();
+    final response = await das.get('/doctor/history', token: token);
+    print('HISTORY RESPONSE: $response');
+    
+    // The backend returns a List directly, not wrapped in a Map
+    if (response is List) {
+      return response.cast<Map<String, dynamic>>().map((e) => Consultationmodel.fromJson(e)).toList();
+    }
+    return [];
   }
   Future<Consultationmodel> getconsult(String consultId) async {
     final token=await TokenStorage.getToken();

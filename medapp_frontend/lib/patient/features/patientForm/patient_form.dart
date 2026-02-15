@@ -66,7 +66,9 @@ class _PatientFormState extends ConsumerState<PatientForm> with SingleTickerProv
                     children: [
                       //top part of app bar
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
                         icon: Icon(Icons.arrow_back_ios, color: Colors.black),
                       ),
                       Text(

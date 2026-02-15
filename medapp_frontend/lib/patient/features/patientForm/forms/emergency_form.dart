@@ -8,6 +8,7 @@ import 'package:medapp_frontend/patient/features/chat/chat.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/my_text_field.dart';
 import 'package:medapp_frontend/patient/features/patientForm/components/titles.dart';
 import 'package:medapp_frontend/patient/providers/patientrepo.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class EmergencyForm extends StatefulWidget {
   final DoctorModel doctor;
@@ -24,9 +25,64 @@ class _EmergencyFormState extends State<EmergencyForm> {
   final problemCtrl = TextEditingController();
   final lifeStyleCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
+String? currentOrderId;
+int? currentAmount;
 
   bool isLoading = false;
   PlatformFile? selectedFile;
+  late Razorpay _razorpay;
+
+  bool paymentDone = false;
+  
+  @override
+  void initState() {
+    super.initState();
+
+    _razorpay = Razorpay();
+
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+  }
+
+  void showSnack(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    try {
+      final repo = Patientrepo();
+
+      final verifyResponse = await repo.verifyPayment(
+        paymentId: response.paymentId!,
+        orderId: response.orderId!,
+        signature: response.signature!,
+      );
+
+      if (verifyResponse['success'] == true) {
+        setState(() {
+          paymentDone= true;
+        });
+        showSnack("Payment Successful & Verified ✅");
+
+        //  NOW you create consultation or move to chat
+      } else {
+        showSnack("Payment verification failed ❌");
+      }
+    } catch (e) {
+      showSnack("Verification error: $e");
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    showSnack("Payment Failed ❌");
+  }
 
   @override
   void dispose() {
@@ -53,17 +109,6 @@ class _EmergencyFormState extends State<EmergencyForm> {
           selectedFile = result.files.first;
         });
       }
-    }
-
-    void showSnack(String message) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
-      );
     }
 
     return Scaffold(
@@ -262,81 +307,167 @@ class _EmergencyFormState extends State<EmergencyForm> {
               ),
             ),
 
-            const SizedBox(height: 30),
+             SizedBox(height: 30),
 
-            // SUBMIT BUTTON
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              onPressed: () async {
-                if (nameCtrl.text.trim().isEmpty ||
-                    ageCtrl.text.trim().isEmpty ||
-                    genderCtrl.text.trim().isEmpty ||
-                    phoneCtrl.text.trim().isEmpty) {
-                  showSnack("Please fill required fields");
-                  return;
-                }
-
-                setState(() => isLoading = true);
-
+              style: ElevatedButton.styleFrom(backgroundColor:paymentDone? Colors.lightGreenAccent: Colors.blue),
+              //changed for razorpay
+              onPressed: 
+              (paymentDone==true)?
+              null:
+              
+              () async {
                 try {
                   final repo = Patientrepo();
 
-                  final response = await repo.submitForm(
-                    doctorId: widget.doctor.id,
-                    fullName: nameCtrl.text.trim(),
-                    age: ageCtrl.text.trim(),
-                    gender: genderCtrl.text.trim(),
-                    contactNo: phoneCtrl.text.trim(),
-                    problem: problemCtrl.text.trim(),
-                    lifeStyle: lifeStyleCtrl.text.trim(),
-                    type: "emergency", // ✅ Correct type
-                    file: selectedFile,
-                  );
+                  final amount = widget.doctor.fees; // your doctor fee
 
-                  print("FULL BACKEND RESPONSE: $response");
+                  final response = await repo.createOrder(amount);
 
+                  print("ORDER RESPONSE: $response");
+                  if (response != null && response['order'] != null) {
+                    final order = response['order'];
 
-                  String? consultationId;
-                  if (response is Map<String, dynamic>) {
-                    dynamic consultData = response['consultation'] ?? response['msg'] ?? response['data'];
-                    if (consultData is Map<String, dynamic>) {
-                      consultationId = (consultData['_id'] ?? consultData['id'])?.toString();
-                    } else if (consultData is String) {
-                      consultationId = consultData;
-                    }
+                    currentOrderId = order['id'];
+                    currentAmount = order['amount'];
+                  } else {
+                    showSnack("Order creation failed");
+                    return;
                   }
 
-                  if (consultationId == null || consultationId.isEmpty) {
-                    print("WARN: consultation id not found, using doctor id as fallback");
-                    consultationId = widget.doctor.id;
-                  }
+                  var options = {
+                    'key': 'rzp_test_SDHaLtPYGWGbGi',
+                    'amount': currentAmount,
+                    'order_id': currentOrderId,
+                    'name': 'MedApp',
+                    'description': 'Doctor Consultation',
+                    'prefill': {'contact': phoneCtrl.text.trim()},
+                  };
+                  print("Opening Razorpay with:");
+                  print("OrderId: $currentOrderId");
+                  print("Amount: $currentAmount");
 
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          ChatScreen(consultationId: consultationId!),
-                    ),
-                  );
+                  _razorpay.open(options);
                 } catch (e) {
-                  showSnack(e.toString().replaceAll("Exception: ", ""));
-                } finally {
-                  setState(() => isLoading = false);
+                  showSnack("Payment error: $e");
                 }
               },
-              child: isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Text(
-                        'Proceed to payment >',
+
+              child:
+
+              paymentDone?
+              Text(
+                'Payment Done',
+                style: GoogleFonts.bungee(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
+              ):
+               Text(
+                'Proceed to payment >',
+                style: GoogleFonts.bungee(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+
+            //submit button
+            SizedBox(height: 10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              onPressed: ( paymentDone==false || isLoading)
+                  ? null
+                  : () async {
+                      if (nameCtrl.text.trim().isEmpty) {
+                        showSnack('Please enter patient name');
+                        return;
+                      }
+
+                      if (ageCtrl.text.trim().isEmpty) {
+                        showSnack('Please enter patient age');
+                        return;
+                      }
+
+                      if (genderCtrl.text.trim().isEmpty) {
+                        showSnack('Please enter patient gender');
+                        return;
+                      }
+
+                      if (phoneCtrl.text.trim().isEmpty) {
+                        showSnack('Please enter contact number');
+                        return;
+                      }
+
+                      setState(() => isLoading = true);
+
+                      try {
+                        final repo = Patientrepo();
+
+                        final response = await repo.submitForm(
+                          doctorId: widget.doctor.id,
+                          fullName: nameCtrl.text.trim(),
+                          age: ageCtrl.text.trim(),
+                          gender: genderCtrl.text.trim(),
+                          contactNo: phoneCtrl.text.trim(),
+                          problem: problemCtrl.text.trim(),
+                          lifeStyle: lifeStyleCtrl.text.trim(),
+                          type: "emergency",
+                          file: selectedFile,
+                        );
+                        print("FULL BACKEND RESPONSE: $response");
+
+                        String? consultationId;
+                        if (response is Map<String, dynamic>) {
+                          dynamic consultData =
+                              response['consultation'] ??
+                              response['msg'] ??
+                              response['data'];
+                          if (consultData is Map<String, dynamic>) {
+                            consultationId =
+                                (consultData['_id'] ?? consultData['id'])
+                                    ?.toString();
+                          } else if (consultData is String) {
+                            consultationId = consultData;
+                          }
+                        }
+
+                        if (consultationId == null || consultationId.isEmpty) {
+                          print(
+                            "WARN: consultation id not found, using doctor id as fallback",
+                          );
+                          consultationId = widget.doctor.id;
+                        }
+
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ChatScreen(consultationId: consultationId!),
+                          ),
+                        );
+                      } catch (e) {
+                        showSnack(e.toString().replaceAll("Exception: ", ""));
+                      } finally {
+                        setState(() => isLoading = false);
+                      }
+                    },
+
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        'Submit',
                         style: GoogleFonts.bungee(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
                           color: Colors.white,
                         ),
                       ),
-                    ),
+              ),
             ),
             const SizedBox(height: 10),
           ],

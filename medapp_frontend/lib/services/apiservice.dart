@@ -56,10 +56,22 @@ class ApiService {
         throw Exception('${response.statusCode} ${response.body}');}
       }
     
+    print('ApiService GET Response: ${response.body}');
     return jsonDecode(response.body);
   } catch (e) {
     throw Exception('Failed to get: $e');
   }
 }
-}
 
+
+//for exotel
+Future<String?> getMaskedNumber(String consultId,{String? token}) async{
+  try{
+    final data = await get('/patient/emergency/masked/$consultId',token: token);
+    return data['maskedNumber'];
+  }catch(e){
+    print("Error fetching masked number: $e");
+    return null;
+  }
+}
+}
