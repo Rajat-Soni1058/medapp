@@ -33,7 +33,7 @@ class ApiService {
       throw Exception('Failed to post: $e');
     }
   }
-  Future<Map<String,dynamic>> get(String endpoint, {String ?token}) async {
+  Future<dynamic> get(String endpoint, {String ?token}) async {
   try {
     final path = endpoint.startsWith('/') ? endpoint : '/$endpoint';
     final url = '$baseUrl$path';
@@ -56,7 +56,8 @@ class ApiService {
         throw Exception('${response.statusCode} ${response.body}');}
       }
     
-    return jsonDecode(response.body) as Map<String,dynamic>;
+    print('ApiService GET Response: ${response.body}');
+    return jsonDecode(response.body);
   } catch (e) {
     throw Exception('Failed to get: $e');
   }
