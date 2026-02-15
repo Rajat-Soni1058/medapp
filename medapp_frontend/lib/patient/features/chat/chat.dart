@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:medapp_frontend/services/apiservice.dart';
+import 'package:medapp_frontend/services/call_service.dart';
+import 'package:medapp_frontend/services/tokenstorage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:medapp_frontend/doctor/providers/consultationmodel.dart';
 import 'package:medapp_frontend/patient/providers/patientrepo.dart';
@@ -53,7 +56,14 @@ class ChatScreen extends ConsumerWidget {
                       icon: const Icon(Icons.video_call),
                     ),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () async{
+                        final apiService = ApiService();
+                        final token = await TokenStorage.getToken();
+                        final maskedNumber  = await apiService.getMaskedNumber(consultationId,token: token);
+                        if(maskedNumber != null){
+                          await CallService.openDialer(maskedNumber);
+                        }
+                      },
                       icon: const Icon(Icons.call),
                     ),
                   ],

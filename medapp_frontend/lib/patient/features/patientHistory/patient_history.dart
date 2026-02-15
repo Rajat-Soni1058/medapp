@@ -33,13 +33,16 @@ class _PatientHistoryState extends ConsumerState<PatientHistory>
             itemCount: cases.length,
             itemBuilder: (context, index) {
               final consultation = cases[index];
-              return PVHCard(
-                statusType: consultation.status == 'responded'
-                    ? "completed"
-                    : "cancelled",
-                datetime: consultation.createdAt,
-                name: consultation.fullName,
-                navigateTo: ChatScreen(consultationId: consultation.id),
+              return Padding(
+                padding: const EdgeInsets.only(top: 5,bottom: 5),
+                child: PVHCard(
+                  statusType: consultation.status == 'responded'
+                      ? "completed"
+                      : "cancelled",
+                  datetime: consultation.createdAt,
+                  name: consultation.fullName,
+                  navigateTo: ChatScreen(consultationId: consultation.id),
+                ),
               );
             },
           ),

@@ -15,15 +15,15 @@ class Patientrepo {
   Future<List<Consultationmodel>> getunresolved() async {
     final token = await TokenStorage.getToken();
     final response = await pas.get('/patient/unresolved', token: token);
-    final list = response['unResolveDocs'] ?? [];
-    return list.map((e) => Consultationmodel.fromJson(e)).toList();
+    final list = (response['unResolveDocs'] as List?) ?? [];
+    return list.cast<Map<String, dynamic>>().map((e) => Consultationmodel.fromJson(e)).toList();
   }
 
   Future<List<Consultationmodel>> getresolved() async {
     final token = await TokenStorage.getToken();
     final response = await pas.get('/patient/resolved', token: token);
-    final list = response['ResolveDocs'] ?? [];
-    return list.map((e) => Consultationmodel.fromJson(e)).toList();
+    final list = (response['ResolveDocs'] as List?) ?? [];
+    return list.cast<Map<String, dynamic>>().map((e) => Consultationmodel.fromJson(e)).toList();
   }
 
   Future<Consultationmodel> getconsult(String consultId) async {

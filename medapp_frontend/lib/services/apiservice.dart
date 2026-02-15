@@ -30,7 +30,7 @@ class ApiService {
       throw Exception('Failed to post: $e');
     }
   }
-  Future<dynamic> get(String endpoint, {String ?token}) async {
+  Future<Map<String,dynamic>> get(String endpoint, {String ?token}) async {
   try {
     final response = await http.get(
       Uri.parse('$baseUrl$endpoint'),
@@ -50,10 +50,21 @@ class ApiService {
         throw Exception('${response.statusCode} ${response.body}');}
       }
     
-    return jsonDecode(response.body);
+    return jsonDecode(response.body) as Map<String,dynamic>;
   } catch (e) {
     throw Exception('Failed to get: $e');
   }
 }
-}
 
+
+//for exotel
+Future<String?> getMaskedNumber(String consultId,{String? token}) async{
+  try{
+    final data = await get('/patient/emergency/masked/$consultId',token: token);
+    return data['maskedNumber'];
+  }catch(e){
+    print("Error fetching masked number: $e");
+    return null;
+  }
+}
+}

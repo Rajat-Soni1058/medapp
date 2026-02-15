@@ -7,9 +7,10 @@ class doctorcard extends ConsumerWidget{
   final String doctorname;
   final String doctortype;
   final String doctorrating;
+  final Widget navigateTo;
   
   
-  const doctorcard({super.key, required this.doctorname, required this.doctortype, required this.doctorrating});
+  const doctorcard({super.key, required this.doctorname, required this.doctortype, required this.doctorrating,required this.navigateTo});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
@@ -31,7 +32,7 @@ class doctorcard extends ConsumerWidget{
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: (){
-         
+            Navigator.push(context, MaterialPageRoute(builder: (_)=>navigateTo));
           },
           child: Padding(
             padding: const EdgeInsets.all(12.0),
