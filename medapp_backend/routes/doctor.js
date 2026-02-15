@@ -108,7 +108,7 @@ doctorRouter.post("/signup", async function (req, res) {
             availTime,
             fees,
             speciality,
-            fcmToken
+        
         });
 
     } catch (e) {
